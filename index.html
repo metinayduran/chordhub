@@ -158,8 +158,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 .admin-table .actions{display:flex;gap:.4rem}
 
 /* Forms */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
-.form-grid.full{grid-template-columns:1fr}
 .form-field{display:flex;flex-direction:column;gap:.35rem}
 .form-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .form-input{background:var(--surface2);border:1px solid var(--border2);color:var(--ink);font-family:'Crimson Pro',serif;font-size:.95rem;padding:.55rem .75rem;outline:none;transition:border-color .15s;width:100%}
@@ -202,7 +200,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
   .admin-nav-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent}
   .admin-nav-item.active{border-left:none;border-bottom-color:var(--accent)}
   .admin-content{padding:1rem}
-  .form-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -256,425 +253,226 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-  // ══════════════════════════════════════════════════════════════
-  //  FIREBASE INITIALIZATION
-  // ══════════════════════════════════════════════════════════════
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script>
+// STORAGE, HELPERS, AND RENDER LOGIC
+const STORAGE_KEY_ARTISTS = 'chordhub_artists';
+const STORAGE_KEY_SONGS   = 'chordhub_songs';
+const STORAGE_KEY_SETTINGS = 'chordhub_settings';
+const DEFAULT_SETTINGS = { siteName: 'ChordHub', tagline: 'Guitar Chords & Lyrics' };
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCfzB82jnqVCYbm8TfBjNB5mxfW4gU60JY",
-    authDomain: "chordhub-d45cf.firebaseapp.com",
-    projectId: "chordhub-d45cf",
-    storageBucket: "chordhub-d45cf.firebasestorage.app",
-    messagingSenderId: "854567914921",
-    appId: "1:854567914921:web:7fc7c362ba03349ca488b8",
-    measurementId: "G-ZC4RH2PDWT"
-  };
+const SEED_ARTISTS = [
+  {id:'oasis',name:'Oasis',genre:'Britpop / Rock',bio:'Formed in Manchester in 1991, Oasis became one of the most iconic bands of the 90s Britpop era.'},
+  {id:'nirvana',name:'Nirvana',genre:'Grunge / Alternative',bio:"The Seattle trio that defined 90s grunge."},
+  {id:'beatles',name:'The Beatles',genre:'Rock / Pop',bio:'The Fab Four from Liverpool changed everything.'},
+];
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const DATA_REF = doc(db, "chordbook", "appState");
+const SEED_SONGS = [
+  {id:'wonderwall',artistId:'oasis',title:'Wonderwall',key:'F#m',capo:2,difficulty:'easy',chords:'Em7,G,Dsus4,A7sus4,Cadd9',
+   lyrics:`[INTRO]\n[Em7] [G] [Dsus4] [A7sus4]\n\n[VERSE]\n[Em7]Today is gonna be the [G]day that they're gonna [Dsus4]throw it back to [A7sus4]you`},
+  {id:'smells',artistId:'nirvana',title:'Smells Like Teen Spirit',key:'F',capo:0,difficulty:'easy',chords:'F5,Bb5,Ab5,Db5',
+   lyrics:`[INTRO]\n[F5] [Bb5] [Ab5] [Db5]\n\n[VERSE]\n[F5]Load up on guns, bring your [Bb5]friends`},
+  {id:'letitbe',artistId:'beatles',title:'Let It Be',key:'C',capo:0,difficulty:'easy',chords:'C,G,Am,F',
+   lyrics:`[INTRO]\n[C] [G] [Am] [F]\n\n[VERSE]\n[C]When I find myself in [G]times of trouble`},
+];
 
-  // ══════════════════════════════════════════════════════════════
-  //  STATE MANAGEMENT
-  // ══════════════════════════════════════════════════════════════
-  let STATE = {
-    artists: [],
-    songs: [],
-    settings: { siteName: 'ChordHub', tagline: 'Guitar Chords' }
-  };
+function loadData(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; } }
+function saveData(key, data) { try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {} }
+if (!localStorage.getItem(STORAGE_KEY_ARTISTS)) saveData(STORAGE_KEY_ARTISTS, SEED_ARTISTS);
+if (!localStorage.getItem(STORAGE_KEY_SONGS))   saveData(STORAGE_KEY_SONGS, SEED_SONGS);
 
-  async function syncToCloud() {
-    try {
-      await setDoc(DATA_REF, STATE);
-      showToast("Cloud Synced ✓");
-    } catch (e) {
-      console.error(e);
-      showToast("Sync Error", "error");
+function getArtists() { return loadData(STORAGE_KEY_ARTISTS, []); }
+function getSongs()   { return loadData(STORAGE_KEY_SONGS, []); }
+function getSettings(){ return { ...DEFAULT_SETTINGS, ...loadData(STORAGE_KEY_SETTINGS, {}) }; }
+function saveArtists(d){ saveData(STORAGE_KEY_ARTISTS, d); }
+function saveSongs(d)  { saveData(STORAGE_KEY_SONGS, d); }
+function saveSettings(d){ saveData(STORAGE_KEY_SETTINGS, d); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// CHORD DIAGRAMS
+const CHORD_DB = {
+  'C':{frets:[-1,3,2,0,1,0],fingers:[0,3,2,0,1,0]},
+  'Cm':{frets:[-1,3,5,5,4,3],fingers:[0,1,3,4,2,1],barre:{fret:3,from:1,to:5}},
+  'Cadd9':{frets:[-1,3,2,0,3,3],fingers:[0,3,2,0,4,4]},
+  'D':{frets:[-1,-1,0,2,3,2],fingers:[0,0,0,1,3,2]},
+  'Dsus4':{frets:[-1,-1,0,2,3,3],fingers:[0,0,0,1,2,3]},
+  'Em7':{frets:[0,2,2,0,3,0],fingers:[0,1,2,0,3,0]},
+  'F5':{frets:[1,3,3,-1,-1,-1],fingers:[1,3,4,0,0,0]},
+  'Bb5':{frets:[-1,1,3,3,-1,-1],fingers:[0,1,3,4,0,0]},
+  'Ab5':{frets:[4,6,6,-1,-1,-1],fingers:[1,3,4,0,0,0]},
+  'Db5':{frets:[-1,-1,4,6,6,-1],fingers:[0,0,1,3,4,0]},
+};
+
+function drawChordSvg(name, w=100, h=110) {
+  const ch = CHORD_DB[name];
+  if (!ch) return `<svg width="${w}" height="${h}"><text x="${w/2}" y="${h/2+4}" text-anchor="middle" font-family="monospace" font-size="11" fill="#6e6658">${esc(name)}</text></svg>`;
+  const S=6,F=5,mL=18,mT=22,sG=13,fG=15,dR=5.5,fs=7,gW=sG*(S-1);
+  let sf = (ch.barre) ? ch.barre.fret : 1;
+  let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+  if(sf===1) s+=`<rect x="${mL}" y="${mT-4}" width="${gW}" height="4" fill="#f2ede6" rx="1"/>`;
+  for(let f=0;f<=F;f++) s+=`<line x1="${mL}" y1="${mT+f*fG}" x2="${mL+gW}" y2="${mT+f*fG}" stroke="#3d3830" stroke-width="1"/>`;
+  for(let i=0;i<S;i++) s+=`<line x1="${mL+i*sG}" y1="${mT}" x2="${mL+i*sG}" y2="${mT+F*fG}" stroke="#3d3830" stroke-width="1.2"/>`;
+  ch.frets.forEach((fret,i)=>{const x=mL+i*sG;
+    if(fret===-1) s+=`<text x="${x}" y="${mT-10}" text-anchor="middle" font-size="${fs+1}" fill="#d94f3a">✕</text>`;
+    else if(fret===0) s+=`<circle cx="${x}" cy="${mT-10}" r="${dR-2}" fill="none" stroke="#f2ede6" stroke-width="1.5"/>`;
+    else{const y=mT+((fret-sf+1)-.5)*fG;s+=`<circle cx="${x}" cy="${y}" r="${dR}" fill="#f2ede6"/>`;}
+  });
+  return s+'</svg>';
+}
+
+// TRANSPOSE & LYRICS
+const CHR=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function shiftNote(n,s){const i=CHR.indexOf(n);return i<0?n:CHR[((i+s)%12+12)%12];}
+function transposeChord(c,s){if(s===0)return c;const m=c.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/);if(!m)return c;return shiftNote(m[1],s)+m[2]+(m[3]?'/'+shiftNote(m[3],s):'');}
+
+function parseLyrics(raw, semitones=0) {
+  return raw.trim().split('\n').map(line => {
+    const sm = line.match(/^\[([A-Z\s]*)\]$/);
+    if (sm) return `<div class="sec-heading">${esc(sm[1])}</div>`;
+    const parts = line.split(/(\[[^\]]+\])/);
+    let lh = '<div class="lyrics-line">';
+    for(let i=0; i<parts.length; i++) {
+      const cm = parts[i].match(/^\[([^\]]+)\]$/);
+      if (cm) {
+        const tc = transposeChord(cm[1], semitones);
+        lh += `<span class="cl-pair"><span class="chord-tok" onmouseenter="showPopup(event,'${esc(tc)}')" onmouseleave="hidePopup()">${esc(tc)}</span><span class="lyric-tok">${esc(parts[++i]||'')}</span></span>`;
+      } else if (parts[i]) lh += `<span class="lyric-tok">${esc(parts[i])}</span>`;
     }
-  }
+    return lh + '</div>';
+  }).join('');
+}
 
-  async function loadInitialData() {
-    try {
-      const snap = await getDoc(DATA_REF);
-      if (snap.exists()) {
-        STATE = snap.data();
-      } else {
-        // Fallback to local if Cloud is empty
-        STATE.artists = JSON.parse(localStorage.getItem('chordhub_artists')) || [];
-        STATE.songs = JSON.parse(localStorage.getItem('chordhub_songs')) || [];
-        STATE.settings = JSON.parse(localStorage.getItem('chordhub_settings')) || { siteName: 'ChordHub', tagline: 'Guitar Chords' };
-      }
-      renderHome();
-    } catch (e) {
-      console.error("Load error:", e);
-      renderHome();
-    }
-  }
+// UI HANDLERS
+let activePage = 'home', transposeSteps = 0, activeSongId = null;
+function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById('page-'+id).classList.add('active'); activePage = id; window.scrollTo(0,0); }
+function setBreadcrumb(crumbs) { document.getElementById('breadcrumb').innerHTML = crumbs.map((c,i) => i < crumbs.length-1 ? `<span class="bc-link" onclick="${c.fn}">${esc(c.label)}</span><span style="color:var(--border2)">/</span>` : `<span>${esc(c.label)}</span>`).join(''); }
 
-  // ══════════════════════════════════════════════════════════════
-  //  CHORD DIAGRAMS & HELPERS
-  // ══════════════════════════════════════════════════════════════
-  const CHORD_DB = {
-    'C':{frets:[-1,3,2,0,1,0],fingers:[0,3,2,0,1,0]},
-    'Cm':{frets:[-1,3,5,5,4,3],fingers:[0,1,3,4,2,1],barre:{fret:3,from:1,to:5}},
-    'Cadd9':{frets:[-1,3,2,0,3,3],fingers:[0,3,2,0,4,4]},
-    'C#':{frets:[-1,4,6,6,6,4],fingers:[0,1,3,3,3,1],barre:{fret:4,from:1,to:5}},
-    'D':{frets:[-1,-1,0,2,3,2],fingers:[0,0,0,1,3,2]},
-    'Dm':{frets:[-1,-1,0,2,3,1],fingers:[0,0,0,2,3,1]},
-    'D7':{frets:[-1,-1,0,2,1,2],fingers:[0,0,0,2,1,3]},
-    'Dsus4':{frets:[-1,-1,0,2,3,3],fingers:[0,0,0,1,2,3]},
-    'E':{frets:[0,2,2,1,0,0],fingers:[0,2,3,1,0,0]},
-    'Em':{frets:[0,2,2,0,0,0],fingers:[0,2,3,0,0,0]},
-    'Em7':{frets:[0,2,2,0,3,0],fingers:[0,1,2,0,3,0]},
-    'E7':{frets:[0,2,0,1,0,0],fingers:[0,2,0,1,0,0]},
-    'F':{frets:[1,1,2,3,3,1],fingers:[1,1,2,3,4,1],barre:{fret:1,from:0,to:5}},
-    'Fm':{frets:[1,3,3,1,1,1],fingers:[1,3,4,1,1,1],barre:{fret:1,from:0,to:5}},
-    'F#m':{frets:[2,4,4,2,2,2],fingers:[1,3,4,1,1,1],barre:{fret:2,from:0,to:5}},
-    'F5':{frets:[1,3,3,-1,-1,-1],fingers:[1,3,4,0,0,0]},
-    'G':{frets:[3,2,0,0,0,3],fingers:[2,1,0,0,0,3]},
-    'G/B':{frets:[-1,2,0,0,0,3],fingers:[0,1,0,0,0,3]},
-    'Am':{frets:[-1,0,2,2,1,0],fingers:[0,0,2,3,1,0]},
-    'Am7':{frets:[-1,0,2,0,1,0],fingers:[0,0,2,0,1,0]},
-    'A':{frets:[-1,0,2,2,2,0],fingers:[0,0,1,2,3,0]},
-    'Asus2':{frets:[-1,0,2,2,0,0],fingers:[0,0,1,2,0,0]},
-    'A7sus4':{frets:[0,0,2,0,3,0],fingers:[0,0,2,0,3,0]},
-    'A7':{frets:[-1,0,2,0,2,0],fingers:[0,0,2,0,3,0]},
-    'B':{frets:[-1,2,4,4,4,2],fingers:[0,1,3,3,3,1],barre:{fret:2,from:1,to:5}},
-    'Bm':{frets:[-1,2,4,4,3,2],fingers:[0,1,3,4,2,1],barre:{fret:2,from:1,to:5}},
-    'Bb':{frets:[-1,1,3,3,3,1],fingers:[0,1,3,3,3,1],barre:{fret:1,from:1,to:5}},
-    'Bb5':{frets:[-1,1,3,3,-1,-1],fingers:[0,1,3,4,0,0]},
-    'Ab5':{frets:[4,6,6,-1,-1,-1],fingers:[1,3,4,0,0,0]},
-    'Db5':{frets:[-1,-1,4,6,6,-1],fingers:[0,0,1,3,4,0]},
-  };
+function renderHome() {
+  const artists = getArtists(), songs = getSongs(), settings = getSettings();
+  const artistCards = artists.map(a => `<div class="artist-card" onclick="goArtist('${esc(a.id)}')"><div class="artist-card-name">${esc(a.name)}</div><div class="genre-tag">${esc(a.genre)}</div></div>`).join('');
+  const songRows = songs.slice().reverse().map(s => `<div class="song-row" onclick="goSong('${esc(s.id)}')"><div><div class="song-row-title">${esc(s.title)}</div></div><span class="key-badge">Key of ${esc(s.key)}</span></div>`).join('');
+  document.getElementById('page-home').innerHTML = `<div class="home-hero"><h1>${esc(settings.siteName)}</h1><p>${esc(settings.tagline)}</p></div><div class="home-sec"><div class="sec-label">Artists</div><div class="artists-grid">${artistCards}</div></div><div class="home-sec"><div class="sec-label">Recent Songs</div><div class="songs-list-wrap">${songRows}</div></div>`;
+  setBreadcrumb([]);
+}
 
-  function drawChordSvg(name, w=100, h=110) {
-    const ch = CHORD_DB[name];
-    if (!ch) return `<svg width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg"><text x="${w/2}" y="${h/2+4}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="11" fill="#6e6658">${esc(name)}</text></svg>`;
-    const S=6,F=5,mL=18,mT=22,sG=13,fG=15,dR=5.5,fs=7;
-    const gW=sG*(S-1);
-    const pf=ch.frets.filter(f=>f>0);
-    let sf=pf.length?Math.min(...pf):1;
-    if(ch.barre)sf=ch.barre.fret;
-    if(sf<=2)sf=1;
-    let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
-    if(sf===1) s+=`<rect x="${mL}" y="${mT-4}" width="${gW}" height="4" fill="#f2ede6" rx="1"/>`;
-    else s+=`<text x="${mL-2}" y="${mT+fG*.6}" font-family="JetBrains Mono,monospace" font-size="${fs-1}" fill="#6e6658" text-anchor="end">${sf}</text>`;
-    for(let f=0;f<=F;f++) s+=`<line x1="${mL}" y1="${mT+f*fG}" x2="${mL+gW}" y2="${mT+f*fG}" stroke="#3d3830" stroke-width="1"/>`;
-    for(let i=0;i<S;i++) s+=`<line x1="${mL+i*sG}" y1="${mT}" x2="${mL+i*sG}" y2="${mT+F*fG}" stroke="#3d3830" stroke-width="1.2"/>`;
-    if(ch.barre){const bf=ch.barre.fret-sf+1,bx1=mL+ch.barre.from*sG,bx2=mL+ch.barre.to*sG,by=mT+(bf-.5)*fG;s+=`<line x1="${bx1}" y1="${by}" x2="${bx2}" y2="${by}" stroke="#f2ede6" stroke-width="${dR*1.9}" stroke-linecap="round"/>`;}
-    ch.frets.forEach((fret,i)=>{const x=mL+i*sG;
-      if(fret===-1) s+=`<text x="${x}" y="${mT-10}" text-anchor="middle" font-size="${fs+1}" fill="#d94f3a" font-family="sans-serif">✕</text>`;
-      else if(fret===0) s+=`<circle cx="${x}" cy="${mT-10}" r="${dR-2}" fill="none" stroke="#f2ede6" stroke-width="1.5"/>`;
-      else{const rel=fret-sf+1;if(rel>=1&&rel<=F){const y=mT+(rel-.5)*fG;s+=`<circle cx="${x}" cy="${y}" r="${dR}" fill="#f2ede6"/>`;}}
-    });
-    return s+'</svg>';
-  }
+function goArtist(id) {
+  const artist = getArtists().find(a=>a.id===id), songs = getSongs().filter(s=>s.artistId===id);
+  const rows = songs.map(s => `<div class="full-song-row" onclick="goSong('${esc(s.id)}')"><div>${esc(s.title)}</div><span class="key-badge">${esc(s.key)}</span></div>`).join('');
+  document.getElementById('page-artist').innerHTML = `<div class="artist-hero"><button class="back-btn" onclick="goHome()">← Back</button><div class="artist-hero-name">${esc(artist.name)}</div><p>${esc(artist.bio)}</p></div><div style="padding:2rem 2.5rem">${rows}</div>`;
+  setBreadcrumb([{label:'Home',fn:'goHome()'},{label:artist.name}]);
+  showPage('artist');
+}
 
-  const CHR=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-  const ENH={Db:'C#',Eb:'D#',Gb:'F#',Ab:'G#',Bb:'A#'};
-  function shiftNote(n,s){const nn=ENH[n]||n;const i=CHR.indexOf(nn);if(i<0)return n;return CHR[((i+s)%12+12)%12];}
-  function transposeChord(c,s){if(s===0)return c;const m=c.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/);if(!m)return c;const[,r,q,b]=m;return shiftNote(r,s)+q+(b?'/'+shiftNote(b,s):'');}
-  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function goSong(id) { activeSongId = id; transposeSteps = 0; renderSongPage(); showPage('song'); }
+function renderSongPage() {
+  const song = getSongs().find(s=>s.id===activeSongId), artist = getArtists().find(a=>a.id===song.artistId);
+  const transKey = transposeChord(song.key, transposeSteps);
+  document.getElementById('page-song').innerHTML = `<div class="song-header"><div class="song-header-title">${esc(song.title)}</div><div class="meta-row"><span class="meta-pill">Key: ${esc(transKey)}</span></div></div><div class="song-toolbar"><button class="t-btn" onclick="doTranspose(-1)">−</button><div class="t-display">${transposeSteps}</div><button class="t-btn" onclick="doTranspose(1)">+</button></div><div class="lyrics-wrap">${parseLyrics(song.lyrics, transposeSteps)}</div>`;
+  setBreadcrumb([{label:'Home',fn:'goHome()'},{label:artist.name,fn:`goArtist('${artist.id}')`},{label:song.title}]);
+}
+function doTranspose(d) { transposeSteps += d; renderSongPage(); }
 
-  // ══════════════════════════════════════════════════════════════
-  //  UI RENDERING
-  // ══════════════════════════════════════════════════════════════
-  let activePage = 'home';
-  let activeSongId = null;
-  let transposeSteps = 0;
+// CHORD POPUP & MODALS
+function showPopup(e, chord) { const p = document.getElementById('chord-popup'); document.getElementById('popup-name').textContent = chord; document.getElementById('popup-diagram').innerHTML = drawChordSvg(chord, 110, 120); const r = e.target.getBoundingClientRect(); p.style.left = r.left + 'px'; p.style.top = (r.bottom + window.scrollY) + 'px'; p.classList.add('show'); }
+function hidePopup() { document.getElementById('chord-popup').classList.remove('show'); }
+function openModal(title, body, footer) { document.getElementById('modal-title').textContent = title; document.getElementById('modal-body').innerHTML = body; document.getElementById('modal-footer').innerHTML = footer; document.getElementById('modal-overlay').classList.add('open'); }
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function showToast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
-  function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-'+id).classList.add('active');
-    activePage = id;
-    window.scrollTo(0,0);
-  }
+// ADMIN - ARTISTS
+function renderAdminArtists() {
+  const artists = getArtists();
+  const rows = artists.map(a => `<tr><td>${esc(a.name)}</td><td><button class="btn btn-secondary btn-sm" onclick="editArtist('${a.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteArtist('${a.id}')">Delete</button></td></tr>`).join('');
+  return `<div class="admin-header"><div class="admin-title">Artists</div><button class="btn btn-primary" onclick="addArtist()">+ Add Artist</button></div><table class="admin-table"><thead><tr><th>Name</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
 
-  function renderHome() {
-    const artists = STATE.artists;
-    const songs = STATE.songs;
-    const settings = STATE.settings;
+function addArtist() { openModal('Add Artist', artistFormHtml({}), `<button class="btn btn-primary" onclick="saveArtistForm()">Save</button>`); }
+function artistFormHtml(a) { return `<div class="form-field"><label class="form-label">Name</label><input class="form-input" id="af-name" value="${esc(a.name||'')}"></div>`; }
+function saveArtistForm() { const artists = getArtists(); artists.push({id:uid(), name:document.getElementById('af-name').value}); saveArtists(artists); closeModal(); renderAdminContent(); }
 
-    const artistCards = artists.length
-      ? artists.map(a => {
-          const sc = songs.filter(s=>s.artistId===a.id).length;
-          return `<div class="artist-card" onclick="goArtist('${esc(a.id)}')">
-            <div class="artist-card-name">${esc(a.name)}</div>
-            <div class="artist-card-meta">${sc} song${sc!==1?'s':''}</div>
-            ${a.genre?`<div class="genre-tag">${esc(a.genre)}</div>`:''}
-          </div>`;
-        }).join('')
-      : `<div class="empty-state">No artists yet. Go to Admin to add some!</div>`;
+// ADMIN - SONGS (REVERTED TO REQUESTED STYLE)
+function renderAdminSongs() {
+  const songs = getSongs();
+  const rows = songs.map(s => `<tr><td>${esc(s.title)}</td><td><button class="btn btn-danger btn-sm" onclick="deleteSong('${s.id}')">Delete</button></td></tr>`).join('');
+  return `<div class="admin-header"><div class="admin-title">Songs</div><button class="btn btn-primary" onclick="addSong()">+ Add Song</button></div><table class="admin-table"><thead><tr><th>Title</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
 
-    const songRows = songs.slice().reverse().slice(0,8).map(s => {
-      const artist = artists.find(a=>a.id===s.artistId);
-      return `<div class="song-row" onclick="goSong('${esc(s.id)}')">
-        <div><div class="song-row-title">${esc(s.title)}</div><div class="song-row-artist">${esc(artist?.name||'Unknown')}</div></div>
-        <div style="display:flex;gap:.5rem;align-items:center">
-          <span class="key-badge">Key of ${esc(s.key||'?')}</span>
-          <span class="diff-badge diff-${s.difficulty||'easy'}">${s.difficulty||'easy'}</span>
-        </div>
-      </div>`;
-    }).join('');
+function addSong() { openModal('Add Song', songFormHtml({}), `<button class="btn btn-primary" onclick="saveSongForm()">Save Song</button>`); }
 
-    document.getElementById('page-home').innerHTML = `
-      <div class="home-hero">
-        <h1>${esc(settings.siteName)}<br><em>Chords.</em></h1>
-        <p>// ${songs.length} songs · ${artists.length} artists</p>
+function songFormHtml(s, id='') {
+  const artists = getArtists();
+  const artistOpts = artists.map(a => `<option value="${esc(a.id)}" ${s.artistId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const diffOpts = ['easy', 'medium', 'hard'].map(d => `<option value="${d}" ${(s.difficulty || 'easy') === d ? 'selected' : ''}>${d}</option>`).join('');
+  const keys = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B', 'Am', 'Em', 'Dm', 'Bm', 'F#m', 'Cm'];
+  const keyOpts = keys.map(k => `<option value="${k}" ${(s.key || 'C') === k ? 'selected' : ''}>${k}</option>`).join('');
+
+  return `
+    <div class="form-field" style="margin-bottom: 1rem;">
+      <label class="form-label">Song Title *</label>
+      <input class="form-input" id="sf-title" value="${esc(s.title || '')}" placeholder="e.g. Wonderwall">
+    </div>
+    <div class="form-field" style="margin-bottom: 1rem;">
+      <label class="form-label">Artist *</label>
+      <select class="form-select" id="sf-artist">${artists.length ? artistOpts : '<option value="">No artists found</option>'}</select>
+    </div>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+      <div class="form-field" style="flex: 1;">
+        <label class="form-label">Key</label>
+        <select class="form-select" id="sf-key">${keyOpts}</select>
       </div>
-      <div class="home-sec">
-        <div class="sec-label">Browse Artists</div>
-        <div class="artists-grid">${artistCards}</div>
+      <div class="form-field" style="flex: 1;">
+        <label class="form-label">Difficulty</label>
+        <select class="form-select" id="sf-diff">${diffOpts}</select>
       </div>
-      <div class="home-sec">
-        <div class="sec-label">Recent Songs</div>
-        <div class="songs-list-wrap">${songRows||'<div class="empty-state">No songs yet.</div>'}</div>
-      </div>`;
-    showPage('home');
-  }
+    </div>
+    <div class="form-field" style="margin-bottom: 1rem;">
+      <label class="form-label">Chords Used</label>
+      <input class="form-input" id="sf-chords" value="${esc(s.chords || '')}" placeholder="Am, F, C, G">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Lyrics with Chords</label>
+      <textarea class="form-input form-textarea tall" id="sf-lyrics" placeholder="[Am]Lyrics...">${esc(s.lyrics || '')}</textarea>
+    </div>
+  `;
+}
 
-  window.goArtist = (id) => {
-    const artist = STATE.artists.find(a=>a.id===id);
-    if (!artist) return;
-    const songs = STATE.songs.filter(s=>s.artistId===id);
+function saveSongForm() {
+  const songs = getSongs();
+  songs.push({
+    id: uid(),
+    title: document.getElementById('sf-title').value,
+    artistId: document.getElementById('sf-artist').value,
+    key: document.getElementById('sf-key').value,
+    difficulty: document.getElementById('sf-diff').value,
+    chords: document.getElementById('sf-chords').value,
+    lyrics: document.getElementById('sf-lyrics').value
+  });
+  saveSongs(songs); closeModal(); renderAdminContent(); showToast('Song added!');
+}
 
-    const rows = songs.map((s,i) => `<div class="full-song-row" onclick="goSong('${esc(s.id)}')">
-        <div style="display:flex;align-items:center;gap:1rem">
-          <span class="row-num">${i+1}</span>
-          <div><div style="font-size:1rem;font-weight:600">${esc(s.title)}</div></div>
-        </div>
-        <div style="display:flex;gap:.5rem;align-items:center">
-          <span class="key-badge">${esc(s.key||'?')}</span>
-          <span style="color:var(--muted);font-size:.8rem">›</span>
-        </div>
-      </div>`).join('');
-
-    document.getElementById('page-artist').innerHTML = `
-      <div class="artist-hero">
-        <button class="back-btn" onclick="goHome()">← Back</button>
-        <div class="artist-hero-name">${esc(artist.name)}</div>
-        <div class="artist-hero-bio">${esc(artist.bio || '')}</div>
-      </div>
-      <div style="padding:2rem 2.5rem">${rows || 'No songs found.'}</div>`;
-    showPage('artist');
-  };
-
-  window.goSong = (id) => {
-    activeSongId = id;
-    transposeSteps = 0;
-    renderSongPage();
-    showPage('song');
-  };
-
-  function renderSongPage() {
-    const song = STATE.songs.find(s=>s.id===activeSongId);
-    if (!song) return;
-    const artist = STATE.artists.find(a=>a.id===song.artistId);
-    const transKey = transposeChord(song.key||'C', transposeSteps);
-    const chordList = (song.chords||'').split(',').map(c=>c.trim()).filter(Boolean);
-    const transChords = chordList.map(c=>transposeChord(c, transposeSteps));
-
-    const diagrams = transChords.map(c => `<div class="legend-chord" onmouseenter="showPopup(event,'${esc(c)}')" onmouseleave="hidePopup()">
-      ${drawChordSvg(c,90,100)}
-      <div class="legend-chord-name">${esc(c)}</div>
-    </div>`).join('');
-
-    document.getElementById('page-song').innerHTML = `
-      <div class="song-header">
-        <div class="song-header-artist" onclick="goArtist('${esc(song.artistId)}')">${esc(artist?.name||'Unknown')}</div>
-        <div class="song-header-title">${esc(song.title)}</div>
-        <div class="meta-row"><span class="meta-pill">Key: ${esc(transKey)}</span></div>
-      </div>
-      <div class="song-toolbar">
-        <div class="transpose-wrap">
-          <button class="t-btn" onclick="doTranspose(-1)">−</button>
-          <div class="t-display">${transposeSteps > 0 ? '+' : ''}${transposeSteps}</div>
-          <button class="t-btn" onclick="doTranspose(1)">+</button>
-          <button class="t-reset" onclick="resetTranspose()">Reset</button>
-        </div>
-      </div>
-      <div class="chord-legend">${diagrams}</div>
-      <div class="lyrics-wrap">${parseLyrics(song.lyrics || '', transposeSteps)}</div>`;
-  }
-
-  function parseLyrics(raw, semitones=0) {
-    const lines = raw.trim().split('\n');
-    let html = '';
-    lines.forEach(line => {
-      const sm = line.match(/^\[([A-Z][A-Z0-9\s]*)\]$/);
-      if (sm) { html += `<div class="sec-heading">${esc(sm[1])}</div>`; return; }
-      const parts = line.split(/(\[[^\]]+\])/);
-      let lh = '<div class="lyrics-line">';
-      let i = 0;
-      while (i < parts.length) {
-        const cm = parts[i].match(/^\[([^\]]+)\]$/);
-        if (cm) {
-          const tc = transposeChord(cm[1], semitones);
-          lh += `<span class="cl-pair"><span class="chord-tok" onmouseenter="showPopup(event,'${esc(tc)}')" onmouseleave="hidePopup()">${esc(tc)}</span><span class="lyric-tok">${esc(parts[i+1]||'')}</span></span>`;
-          i += 2;
-        } else {
-          if (parts[i]) lh += `<span class="lyric-tok">${esc(parts[i])}</span>`;
-          i++;
-        }
-      }
-      html += lh + '</div>';
-    });
-    return html;
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  //  ADMIN FUNCTIONS (FIREBASE ENABLED)
-  // ══════════════════════════════════════════════════════════════
-  let adminPanel = 'artists';
-
-  window.saveArtistForm = async (id = '') => {
-    const name = document.getElementById('af-name').value.trim();
-    if (!name) return;
-    const artist = {
-        id: id || Date.now().toString(36),
-        name,
-        genre: document.getElementById('af-genre').value,
-        bio: document.getElementById('af-bio').value
-    };
-    if (id) {
-      const idx = STATE.artists.findIndex(a => a.id === id);
-      STATE.artists[idx] = artist;
-    } else {
-      STATE.artists.push(artist);
-    }
-    await syncToCloud();
-    closeModal();
-    renderAdminContent();
-  };
-
-  window.saveSongForm = async (id = '') => {
-    const song = {
-      id: id || Date.now().toString(36),
-      title: document.getElementById('sf-title').value.trim(),
-      artistId: document.getElementById('sf-artist').value,
-      key: document.getElementById('sf-key').value,
-      lyrics: document.getElementById('sf-lyrics').value,
-      chords: document.getElementById('sf-chords').value
-    };
-    if (id) {
-      const idx = STATE.songs.findIndex(s => s.id === id);
-      STATE.songs[idx] = song;
-    } else {
-      STATE.songs.push(song);
-    }
-    await syncToCloud();
-    closeModal();
-    renderAdminContent();
-  };
-
-  window.deleteArtist = async (id) => {
-    if(!confirm('Delete this artist?')) return;
-    STATE.artists = STATE.artists.filter(a => a.id !== id);
-    await syncToCloud();
-    renderAdminContent();
-  };
-
-  window.deleteSong = async (id) => {
-    if(!confirm('Delete this song?')) return;
-    STATE.songs = STATE.songs.filter(s => s.id !== id);
-    await syncToCloud();
-    renderAdminContent();
-  };
-
-  window.saveSettingsForm = async () => {
-    STATE.settings.siteName = document.getElementById('set-name').value;
-    await syncToCloud();
-    renderAdminContent();
-  };
-
-  // ══════════════════════════════════════════════════════════════
-  //  UI ACTIONS & POPUPS
-  // ══════════════════════════════════════════════════════════════
-  window.goHome = () => { renderHome(); showPage('home'); };
-  window.doTranspose = (d) => { transposeSteps += d; renderSongPage(); };
-  window.resetTranspose = () => { transposeSteps = 0; renderSongPage(); };
-
-  let popupTimer;
-  window.showPopup = (e, chord) => {
-    clearTimeout(popupTimer);
-    const p = document.getElementById('chord-popup');
-    document.getElementById('popup-name').textContent = chord;
-    document.getElementById('popup-diagram').innerHTML = drawChordSvg(chord, 110, 120);
-    const r = e.target.getBoundingClientRect();
-    p.style.left = Math.min(r.left, window.innerWidth-140) + 'px';
-    p.style.top = (r.bottom + 8 + window.scrollY) + 'px';
-    p.classList.add('show');
-  };
-  window.hidePopup = () => {
-    popupTimer = setTimeout(() => document.getElementById('chord-popup').classList.remove('show'), 200);
-  };
-
-  window.showToast = (msg, type='ok') => {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (type==='error'?' error':'');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  };
-
-  window.openModal = (title, bodyHtml, footerHtml) => {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').innerHTML = bodyHtml;
-    document.getElementById('modal-footer').innerHTML = footerHtml;
-    document.getElementById('modal-overlay').classList.add('open');
-  };
-  window.closeModal = () => document.getElementById('modal-overlay').classList.remove('open');
-
-  // Admin UI Logic
-  document.getElementById('admin-toggle-btn').onclick = () => {
-    if (activePage === 'admin') goHome();
-    else { renderAdminContent(); showPage('admin'); }
-  };
-
-  document.getElementById('admin-sidebar').onclick = (e) => {
-    const item = e.target.closest('[data-panel]');
-    if (!item) return;
-    adminPanel = item.dataset.panel;
-    document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('active'));
-    item.classList.add('active');
-    renderAdminContent();
-  };
-
-  function renderAdminContent() {
-    const el = document.getElementById('admin-content');
-    if (adminPanel === 'artists') {
-        const rows = STATE.artists.map(a => `<tr><td>${esc(a.name)}</td><td><button class="btn btn-secondary btn-sm" onclick="editArtist('${a.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteArtist('${a.id}')">Del</button></td></tr>`).join('');
-        el.innerHTML = `<div class="admin-header"><div class="admin-title">Artists</div><button class="btn btn-primary" onclick="addArtist()">+ Add</button></div><table class="admin-table">${rows}</table>`;
-    } else if (adminPanel === 'songs') {
-        const rows = STATE.songs.map(s => `<tr><td>${esc(s.title)}</td><td><button class="btn btn-secondary btn-sm" onclick="editSong('${s.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSong('${s.id}')">Del</button></td></tr>`).join('');
-        el.innerHTML = `<div class="admin-header"><div class="admin-title">Songs</div><button class="btn btn-primary" onclick="addSong()">+ Add</button></div><table class="admin-table">${rows}</table>`;
-    } else {
-        el.innerHTML = `<div class="admin-header"><div class="admin-title">Settings</div></div><label class="form-label">Site Name</label><input class="form-input" id="set-name" value="${esc(STATE.settings.siteName)}"><br><br><button class="btn btn-primary" onclick="saveSettingsForm()">Save</button>`;
-    }
-  }
-
-  // Forms
-  window.addArtist = () => openModal('Add Artist', `<label class="form-label">Name</label><input class="form-input" id="af-name"><label class="form-label">Genre</label><input class="form-input" id="af-genre"><label class="form-label">Bio</label><textarea class="form-input" id="af-bio"></textarea>`, `<button class="btn btn-primary" onclick="saveArtistForm()">Save</button>`);
-  window.editArtist = (id) => {
-    const a = STATE.artists.find(x=>x.id===id);
-    openModal('Edit Artist', `<label class="form-label">Name</label><input class="form-input" id="af-name" value="${esc(a.name)}"><label class="form-label">Genre</label><input class="form-input" id="af-genre" value="${esc(a.genre||'')}"><label class="form-label">Bio</label><textarea class="form-input" id="af-bio">${esc(a.bio||'')}</textarea>`, `<button class="btn btn-primary" onclick="saveArtistForm('${id}')">Update</button>`);
-  };
-  window.addSong = () => {
-    const opts = STATE.artists.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-    openModal('Add Song', `<label class="form-label">Title</label><input class="form-input" id="sf-title"><label class="form-label">Artist</label><select class="form-select" id="sf-artist">${opts}</select><label class="form-label">Key</label><input class="form-input" id="sf-key"><label class="form-label">Chords (comma separated)</label><input class="form-input" id="sf-chords"><label class="form-label">Lyrics</label><textarea class="form-input tall" id="sf-lyrics"></textarea>`, `<button class="btn btn-primary" onclick="saveSongForm()">Save</button>`);
-  };
-  window.editSong = (id) => {
-    const s = STATE.songs.find(x=>x.id===id);
-    const opts = STATE.artists.map(a=>`<option value="${a.id}" ${a.id===s.artistId?'selected':''}>${a.name}</option>`).join('');
-    openModal('Edit Song', `<label class="form-label">Title</label><input class="form-input" id="sf-title" value="${esc(s.title)}"><label class="form-label">Artist</label><select class="form-select" id="sf-artist">${opts}</select><label class="form-label">Key</label><input class="form-input" id="sf-key" value="${esc(s.key)}"><label class="form-label">Chords</label><input class="form-input" id="sf-chords" value="${esc(s.chords)}"><label class="form-label">Lyrics</label><textarea class="form-input tall" id="sf-lyrics">${esc(s.lyrics)}</textarea>`, `<button class="btn btn-primary" onclick="saveSongForm('${id}')">Update</button>`);
-  };
-
-  // Init
-  document.getElementById('logo-btn').onclick = goHome;
-  document.getElementById('modal-close-btn').onclick = closeModal;
-  loadInitialData();
+// NAVIGATION
+let adminPanel = 'artists';
+document.getElementById('admin-toggle-btn').onclick = () => {
+  if (activePage === 'admin') { goHome(); }
+  else { renderAdminContent(); showPage('admin'); setBreadcrumb([{label:'Admin'}]); }
+};
+document.getElementById('admin-sidebar').addEventListener('click', e => {
+  const item = e.target.closest('[data-panel]');
+  if (!item) return;
+  adminPanel = item.dataset.panel;
+  document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('active'));
+  item.classList.add('active');
+  renderAdminContent();
+});
+function renderAdminContent() {
+  const el = document.getElementById('admin-content');
+  if (adminPanel === 'artists') el.innerHTML = renderAdminArtists();
+  else if (adminPanel === 'songs') el.innerHTML = renderAdminSongs();
+}
+function goHome() { renderHome(); showPage('home'); }
+document.getElementById('logo-btn').onclick = goHome;
+document.getElementById('modal-close-btn').onclick = closeModal;
+renderHome();
 </script>
 </body>
 </html>
