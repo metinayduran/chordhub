@@ -42,7 +42,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 .home-hero::before{content:'';position:absolute;right:-4rem;top:-4rem;width:300px;height:300px;background:radial-gradient(circle,rgba(232,160,32,.06),transparent 70%);pointer-events:none}
 .home-hero h1{font-family:'Unbounded',sans-serif;font-size:clamp(2.4rem,6vw,5rem);font-weight:900;letter-spacing:-.03em;line-height:.92;margin-bottom:1rem}
 .home-hero h1 em{color:var(--accent);font-style:normal}
-.home-hero p{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.75rem;letter-spacing:.08em}
 .home-sec{padding:2rem 2.5rem}
 .sec-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:.75rem}
 .sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
@@ -51,15 +50,14 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 .artist-card{background:var(--surface);padding:1.5rem;cursor:pointer;transition:background .15s;position:relative;overflow:hidden}
 .artist-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .2s}
 .artist-card:hover{background:var(--surface2)}
+.artist-card:hover::before{transform:scaleY(1)}
 .artist-card-name{font-family:'Unbounded',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.3rem}
-.artist-card-meta{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)}
 .genre-tag{display:inline-block;background:var(--surface2);border:1px solid var(--border2);font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.1rem .4rem;color:var(--accent);margin-top:.5rem}
 
 /* SONG ROWS */
 .songs-list-wrap{display:flex;flex-direction:column;gap:1px;background:var(--border)}
 .song-row{background:var(--surface);padding:.9rem 1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;gap:1rem}
 .song-row:hover{background:var(--surface2)}
-.song-row-title{font-size:1rem;font-weight:600}
 .key-badge{font-family:'JetBrains Mono',monospace;font-size:.65rem;background:var(--surface2);border:1px solid var(--border2);padding:.2rem .5rem;color:var(--ink2);white-space:nowrap}
 
 /* ADMIN PANEL */
@@ -90,8 +88,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 .modal-header{padding:1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .modal-body{padding:1.5rem}
 .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.75rem}
-.btn{font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:.5rem 1rem;cursor:pointer;border:1px solid}
-.btn-primary{background:var(--accent);color:#000}
+.btn{font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:.5rem 1rem;cursor:pointer;border:1px solid;transition:all .15s}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent)}
+.btn-secondary{background:none;color:var(--ink2);border-color:var(--border2)}
 .btn-danger{border-color:var(--red);color:var(--red);background:none}
 .btn-sm{padding:.3rem .6rem;font-size:.6rem}
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface);border:1px solid var(--border2);padding:.75rem 1.2rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;z-index:9000;display:none;border-left:3px solid var(--green)}
@@ -130,7 +129,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <div class="modal-header"><h2 id="modal-title"></h2><button onclick="closeModal()">✕</button></div>
+    <div class="modal-header"><h2 id="modal-title"></h2><button onclick="closeModal()" style="background:none;border:none;color:var(--muted);cursor:pointer">✕</button></div>
     <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer" id="modal-footer"></div>
   </div>
@@ -164,7 +163,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
     renderHome();
   }
 
-  // UI RENDERING
+  // NAVIGATION
   window.goHome = () => { renderHome(); showPage('home'); };
   function showPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById('page-'+id).classList.add('active'); }
 
@@ -177,7 +176,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
   window.goArtist = (id) => {
     const a = STATE.artists.find(x=>x.id===id);
     const s = STATE.songs.filter(x=>x.artistId===id).map(x=>`<div class="song-row" onclick="goSong('${x.id}')">${x.title}</div>`).join('');
-    document.getElementById('page-artist').innerHTML = `<div style="padding:2.5rem"><h2>${a.name}</h2><p>${a.bio || ''}</p><br>${s}</div>`;
+    document.getElementById('page-artist').innerHTML = `<div style="padding:2.5rem"><h2>${a.name}</h2><p style="font-style:italic;color:var(--muted)">${a.genre || ''}</p><p>${a.bio || ''}</p><br>${s}</div>`;
     showPage('artist');
   };
 
@@ -188,45 +187,54 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
   };
 
   function parseLyrics(raw) {
+    if(!raw) return '';
     return raw.split('\n').map(line => {
       const parts = line.split(/(\[[^\]]+\])/);
       return `<div>${parts.map(p => p.startsWith('[') ? `<span class="chord-tok">${p.slice(1,-1)}</span>` : `<span class="lyric-tok">${p}</span>`).join('')}</div>`;
     }).join('');
   }
 
-  // ADMIN LOGIC
+  // ADMIN PANEL
   let activePanel = 'artists';
   document.getElementById('admin-toggle-btn').onclick = () => { renderAdmin(); showPage('admin'); };
-  document.getElementById('admin-sidebar').onclick = (e) => { if(e.target.dataset.panel) { activePanel = e.target.dataset.panel; renderAdmin(); } };
+  document.getElementById('admin-sidebar').onclick = (e) => {
+    const item = e.target.closest('[data-panel]');
+    if(item) {
+        activePanel = item.dataset.panel;
+        document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('active'));
+        item.classList.add('active');
+        renderAdmin();
+    }
+  };
 
   function renderAdmin() {
     const content = document.getElementById('admin-content');
     if(activePanel === 'artists') {
-      const rows = STATE.artists.map(a => `<tr><td>${a.name}</td><td><button class="btn btn-sm" onclick="editArtist('${a.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteArtist('${a.id}')">Delete</button></td></tr>`).join('');
-      content.innerHTML = `<div class="admin-header"><h3>Artists</h3><button class="btn btn-primary" onclick="addArtist()">+ Add</button></div><table class="admin-table"><thead><tr><th>Name</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+      const rows = STATE.artists.map(a => `<tr><td>${a.name}</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editArtist('${a.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteArtist('${a.id}')">Delete</button></td></tr>`).join('');
+      content.innerHTML = `<div class="admin-header"><h3 class="admin-title">Artists</h3><button class="btn btn-primary" onclick="addArtist()">+ Add Artist</button></div><table class="admin-table"><thead><tr><th>Name</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
     } else {
-      const rows = STATE.songs.map(s => `<tr><td>${s.title}</td><td><button class="btn btn-sm" onclick="editSong('${s.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSong('${s.id}')">Delete</button></td></tr>`).join('');
-      content.innerHTML = `<div class="admin-header"><h3>Songs</h3><button class="btn btn-primary" onclick="addSong()">+ Add</button></div><table class="admin-table"><thead><tr><th>Title</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
+      const rows = STATE.songs.map(s => `<tr><td>${s.title}</td><td class="actions"><button class="btn btn-secondary btn-sm" onclick="editSong('${s.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSong('${s.id}')">Delete</button></td></tr>`).join('');
+      content.innerHTML = `<div class="admin-header"><h3 class="admin-title">Songs</h3><button class="btn btn-primary" onclick="addSong()">+ Add Song</button></div><table class="admin-table"><thead><tr><th>Title</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`;
     }
   }
 
-  // ARTIST FORMS
+  // EXPOSING FUNCTIONS TO WINDOW FOR BUTTON ONCLICKS
   window.addArtist = () => {
-    openModal('Add Artist', `
-      <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="af-name"></div>
-      <div class="form-field"><label class="form-label">Genre</label><input class="form-input" id="af-genre"></div>
-      <div class="form-field"><label class="form-label">Bio</label><textarea class="form-input" id="af-bio"></textarea></div>
-    `, `<button class="btn btn-primary" onclick="saveArtist()">Save</button>`);
+    openModal('Add Artist', artistFormHtml({}), `<button class="btn btn-primary" onclick="saveArtist()">Save</button>`);
   };
 
   window.editArtist = (id) => {
     const a = STATE.artists.find(x=>x.id===id);
-    openModal('Edit Artist', `
-      <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="af-name" value="${a.name}"></div>
+    openModal('Edit Artist', artistFormHtml(a), `<button class="btn btn-primary" onclick="saveArtist('${id}')">Update</button>`);
+  };
+
+  function artistFormHtml(a) {
+    return `
+      <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="af-name" value="${a.name||''}"></div>
       <div class="form-field"><label class="form-label">Genre</label><input class="form-input" id="af-genre" value="${a.genre||''}"></div>
       <div class="form-field"><label class="form-label">Bio</label><textarea class="form-input" id="af-bio">${a.bio||''}</textarea></div>
-    `, `<button class="btn btn-primary" onclick="saveArtist('${id}')">Update</button>`);
-  };
+    `;
+  }
 
   window.saveArtist = async (id='') => {
     const data = { id: id || Date.now().toString(), name: document.getElementById('af-name').value, genre: document.getElementById('af-genre').value, bio: document.getElementById('af-bio').value };
@@ -237,7 +245,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 
   window.deleteArtist = async (id) => { if(confirm('Delete?')) { STATE.artists = STATE.artists.filter(a=>a.id!==id); await sync(); renderAdmin(); } };
 
-  // SONG FORMS (Vertical layout restored with Key/Difficulty/Edit)
   window.addSong = () => { openModal('Add Song', songFormHtml({}), `<button class="btn btn-primary" onclick="saveSong()">Save</button>`); };
 
   window.editSong = (id) => {
@@ -278,8 +285,14 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2.5
 
   window.deleteSong = async (id) => { if(confirm('Delete?')) { STATE.songs = STATE.songs.filter(x=>x.id!==id); await sync(); renderAdmin(); } };
 
+  // UI HELPERS
   window.closeModal = () => document.getElementById('modal-overlay').classList.remove('open');
-  function openModal(t, b, f) { document.getElementById('modal-title').innerText = t; document.getElementById('modal-body').innerHTML = b; document.getElementById('modal-footer').innerHTML = f; document.getElementById('modal-overlay').classList.add('open'); }
+  function openModal(t, b, f) {
+    document.getElementById('modal-title').innerText = t;
+    document.getElementById('modal-body').innerHTML = b;
+    document.getElementById('modal-footer').innerHTML = f;
+    document.getElementById('modal-overlay').classList.add('open');
+  }
   function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); }
 
   load();
