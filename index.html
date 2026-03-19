@@ -204,6 +204,45 @@ body.admin-mode .card-del-btn{display:flex;}
 footer{border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--text-dim);font-size:0.82rem;margin-top:4rem;}
 footer span{color:var(--accent);}
 
+/* HOME NAV TABS */
+.home-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);max-width:1200px;margin:0 auto;padding:0 2rem;}
+.home-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;padding:0.8rem 1.4rem;cursor:pointer;transition:all 0.2s;margin-bottom:-1px;letter-spacing:0.01em;}
+.home-tab:hover{color:var(--text);}
+.home-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+/* ARTIST CARDS GRID */
+.artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.artist-card{background:var(--surface);padding:1.4rem 1.4rem 1.2rem;cursor:pointer;transition:background 0.15s;position:relative;display:flex;flex-direction:column;gap:0.5rem;}
+.artist-card:hover{background:var(--surface2);}
+.artist-card:hover .artist-card-arrow{opacity:1;transform:translateX(0);}
+.artist-card-initial{width:44px;height:44px;border-radius:10px;background:rgba(232,201,122,0.12);border:1px solid rgba(232,201,122,0.2);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--accent);margin-bottom:0.3rem;flex-shrink:0;}
+.artist-card-name{font-size:1rem;font-weight:600;color:var(--text);line-height:1.2;}
+.artist-card-meta{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+.artist-card-genre{font-size:0.72rem;color:var(--text-muted);text-transform:capitalize;}
+.artist-card-count{font-size:0.72rem;color:var(--text-dim);}
+.artist-card-arrow{color:var(--accent);font-size:0.9rem;opacity:0;transform:translateX(-4px);transition:all 0.2s;margin-left:auto;align-self:flex-end;}
+
+/* ARTIST PAGE */
+.artist-page{display:none;}
+.artist-page.active{display:block;}
+.artist-hero{padding:2.5rem 2rem 2rem;max-width:1000px;margin:0 auto;border-bottom:1px solid var(--border);}
+.artist-hero-top{display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem;}
+.artist-big-initial{width:72px;height:72px;border-radius:16px;background:rgba(232,201,122,0.12);border:1px solid rgba(232,201,122,0.25);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--accent);flex-shrink:0;}
+.artist-hero h1{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;letter-spacing:-0.02em;}
+.artist-hero-meta{display:flex;gap:0.8rem;flex-wrap:wrap;align-items:center;margin-top:0.5rem;}
+.artist-hero-meta span{font-size:0.82rem;color:var(--text-muted);}
+.artist-hero-meta .dot{color:var(--text-dim);}
+.artist-songs-section{max-width:1000px;margin:0 auto;padding:2rem;}
+.artist-songs-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem;}
+.artist-songs-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.artist-songs-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.artist-song-row{background:var(--surface);padding:1rem 1.4rem;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.artist-song-row:hover{background:var(--surface2);}
+.artist-song-row-title{font-size:0.98rem;font-weight:500;}
+.artist-song-row-meta{display:flex;gap:0.5rem;align-items:center;flex-shrink:0;}
+.artist-song-row-arrow{color:var(--text-dim);font-size:0.85rem;transition:color 0.15s;}
+.artist-song-row:hover .artist-song-row-arrow{color:var(--accent);}
+
 /* MISC */
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -221,6 +260,7 @@ footer span{color:var(--accent);}
   </div>
   <nav>
     <a href="#" onclick="goHome();return false;">Songs</a>
+    <a href="#" onclick="goArtists();return false;">Artists</a>
     <button class="nav-link" id="adminNavBtn" onclick="goAdmin()" style="display:none">⚙ Admin</button>
     <button class="nav-link" id="loginNavBtn" onclick="openLogin()">Login</button>
     <button class="nav-link" id="logoutNavBtn" onclick="doLogout()" style="display:none">Logout</button>
@@ -234,11 +274,19 @@ footer span{color:var(--accent);}
     <h1>Play music,<br><em>not ads.</em></h1>
     <p>A clean space for guitar chords & tabs. No pop-ups, no banners — just you and your guitar.</p>
     <div class="hero-search">
-      <input type="text" placeholder="Search for a song or artist…" id="heroSearch" oninput="filterSongs(this.value)">
-      <button class="btn-search" onclick="filterSongs(document.getElementById('heroSearch').value)">Search</button>
+      <input type="text" placeholder="Search for a song or artist…" id="heroSearch" oninput="onHeroSearch(this.value)">
+      <button class="btn-search" onclick="onHeroSearch(document.getElementById('heroSearch').value)">Search</button>
     </div>
   </div>
-  <div class="section">
+
+  <!-- Home tabs: Songs / Artists -->
+  <div class="home-tabs">
+    <button class="home-tab active" id="tabSongs" onclick="switchHomeTab('songs',this)">Songs</button>
+    <button class="home-tab" id="tabArtists" onclick="switchHomeTab('artists',this)">Artists</button>
+  </div>
+
+  <!-- Songs panel -->
+  <div id="homeSongsPanel" class="section">
     <div class="categories" id="categoryFilter">
       <button class="cat-btn active" onclick="setCategory('all',this)">All</button>
       <button class="cat-btn" onclick="setCategory('rock',this)">Rock</button>
@@ -253,12 +301,38 @@ footer span{color:var(--accent);}
       <div class="loading"><div class="spinner"></div>&nbsp;Loading songs…</div>
     </div>
   </div>
+
+  <!-- Artists panel -->
+  <div id="homeArtistsPanel" class="section" style="display:none">
+    <div class="section-title">Browse Artists</div>
+    <div id="artistsGrid" class="artists-grid">
+      <div class="loading"><div class="spinner"></div>&nbsp;Loading artists…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ARTIST PAGE ══════════════════════ -->
+<div class="artist-page" id="artistPage">
+  <div class="artist-hero">
+    <button class="back-btn" onclick="goArtists()">← Back to Artists</button>
+    <div class="artist-hero-top">
+      <div class="artist-big-initial" id="apInitial"></div>
+      <div>
+        <h1 id="apName"></h1>
+        <div class="artist-hero-meta" id="apMeta"></div>
+      </div>
+    </div>
+  </div>
+  <div class="artist-songs-section">
+    <div class="artist-songs-title" id="apSongsTitle">Songs</div>
+    <div class="artist-songs-list" id="apSongsList"></div>
+  </div>
 </div>
 
 <!-- ══════════════════════ SONG PAGE ══════════════════════ -->
 <div class="song-page" id="songPage">
   <div class="song-header">
-    <button class="back-btn" onclick="goHome()">← Back to songs</button>
+    <button class="back-btn" onclick="songReturnFn ? songReturnFn() : goHome()">← Back to songs</button>
     <h1 id="spTitle"></h1>
     <div class="by" id="spArtist"></div>
     <div class="song-meta-row">
@@ -481,6 +555,7 @@ function withFb(fn){ window._fbReady ? fn(window._fb) : window.addEventListener(
 let SONGS=[], ARTISTS=[], currentSong=null, transposeAmount=0;
 let autoscrolling=false, autoscrollInterval=null, fontSize=0.95, activeCategory='all';
 let pendingDeleteFn=()=>{};
+let songReturnFn = null; // where to go when pressing back from song page
 
 // ─── Music helpers ────────────────────────────────────────────────────────────
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -527,14 +602,24 @@ function drawChord(name,lg=false){
 function hideAll(){
   document.getElementById('homePage').classList.add('hidden');
   document.getElementById('songPage').classList.remove('active');
+  document.getElementById('artistPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
 }
 function goHome(){
   hideAll();
   document.getElementById('homePage').classList.remove('hidden');
-  stopAutoscroll(); currentSong=null;
+  stopAutoscroll(); currentSong=null; songReturnFn=null;
   renderSongs(SONGS);
+}
+function goArtists(){
+  hideAll();
+  document.getElementById('homePage').classList.remove('hidden');
+  switchHomeTab('artists', document.getElementById('tabArtists'));
+}
+function openLogin(){
+  hideAll();
+  document.getElementById('loginPage').classList.add('active');
 }
 function goAdmin(){
   if(!window._currentUser){openLogin();return;}
@@ -542,9 +627,58 @@ function goAdmin(){
   document.getElementById('adminPage').classList.add('active');
   renderAdminSongs(); renderAdminArtists();
 }
-function openLogin(){
+
+function switchHomeTab(tab, btn){
+  document.querySelectorAll('.home-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('homeSongsPanel').style.display = tab==='songs' ? '' : 'none';
+  document.getElementById('homeArtistsPanel').style.display = tab==='artists' ? '' : 'none';
+  if(tab==='artists') renderArtistsGrid(document.getElementById('heroSearch').value);
+}
+
+function onHeroSearch(q){
+  document.getElementById('heroSearch').value=q;
+  document.getElementById('headerSearch').value=q;
+  const activePanelIsArtists = document.getElementById('homeArtistsPanel').style.display !== 'none';
+  if(activePanelIsArtists) renderArtistsGrid(q);
+  else renderSongs(SONGS);
+}
+
+function openArtistPage(artistName){
+  const artistObj = ARTISTS.find(a=>a.name===artistName);
+  const songs = SONGS.filter(s=>s.artist===artistName);
   hideAll();
-  document.getElementById('loginPage').classList.add('active');
+  document.getElementById('artistPage').classList.add('active');
+
+  const initials = artistName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('apInitial').textContent = initials;
+  document.getElementById('apName').textContent = artistName;
+
+  const meta = document.getElementById('apMeta');
+  const parts = [];
+  if(artistObj?.genre) parts.push(`<span>${artistObj.genre}</span><span class="dot">·</span>`);
+  if(artistObj?.origin) parts.push(`<span>${esc(artistObj.origin)}</span><span class="dot">·</span>`);
+  parts.push(`<span>${songs.length} song${songs.length!==1?'s':''}</span>`);
+  meta.innerHTML = parts.join(' ');
+
+  document.getElementById('apSongsTitle').textContent = `${songs.length} Song${songs.length!==1?'s':''}`;
+
+  const list = document.getElementById('apSongsList');
+  if(!songs.length){
+    list.innerHTML='<div class="empty-state">No songs yet for this artist.</div>';
+  } else {
+    list.innerHTML = songs.map(s=>`
+      <div class="artist-song-row" onclick="openSong('${s.id}', ()=>openArtistPage('${esc(s.artist)}'))">
+        <div class="artist-song-row-title">${esc(s.title)}</div>
+        <div class="artist-song-row-meta">
+          <span class="tag tag-key">${s.key||''}</span>
+          <span class="tag tag-diff-${s.difficulty||'easy'}">${s.difficulty||'easy'}</span>
+          ${(s.capo>0)?`<span class="tag tag-capo">Capo ${s.capo}</span>`:''}
+          <span class="artist-song-row-arrow">→</span>
+        </div>
+      </div>`).join('');
+  }
+  window.scrollTo(0,0);
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -579,7 +713,7 @@ function doLogout(){
 function loadSongs(){
   withFb(({db,collection,getDocs,query,orderBy})=>{
     getDocs(query(collection(db,'songs'),orderBy('title')))
-      .then(snap=>{SONGS=snap.docs.map(d=>({id:d.id,...d.data()}));renderSongs(SONGS);})
+      .then(snap=>{SONGS=snap.docs.map(d=>({id:d.id,...d.data()}));renderSongs(SONGS);renderArtistsGrid();})
       .catch(e=>{console.warn('Firestore error:',e);renderSongs([]);});
   });
 }
@@ -589,9 +723,38 @@ function loadArtists(){
       .then(snap=>{
         ARTISTS=snap.docs.map(d=>({id:d.id,...d.data()}));
         document.getElementById('artistSuggestions').innerHTML=ARTISTS.map(a=>`<option value="${esc(a.name)}">`).join('');
+        renderArtistsGrid();
       })
       .catch(()=>{});
   });
+}
+
+// ─── Artists grid ─────────────────────────────────────────────────────────────
+function renderArtistsGrid(q=''){
+  const grid = document.getElementById('artistsGrid');
+  // Build a unique artist list from songs + ARTISTS collection merged
+  const nameMap = {};
+  SONGS.forEach(s=>{ if(s.artist){ if(!nameMap[s.artist]) nameMap[s.artist]={name:s.artist,count:0}; nameMap[s.artist].count++; } });
+  ARTISTS.forEach(a=>{ if(!nameMap[a.name]) nameMap[a.name]={name:a.name,count:0}; Object.assign(nameMap[a.name],a); });
+
+  let list = Object.values(nameMap).sort((a,b)=>a.name.localeCompare(b.name));
+  if(q) list = list.filter(a=>a.name.toLowerCase().includes(q.toLowerCase()));
+
+  if(!list.length){ grid.innerHTML='<div class="empty-state">No artists found.</div>'; return; }
+
+  grid.innerHTML = list.map(a=>{
+    const initials = a.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `
+    <div class="artist-card animate-in" onclick="openArtistPage('${esc(a.name)}')">
+      <div class="artist-card-initial">${initials}</div>
+      <div class="artist-card-name">${esc(a.name)}</div>
+      <div class="artist-card-meta">
+        ${a.genre ? `<span class="artist-card-genre">${a.genre}</span>` : ''}
+        <span class="artist-card-count">${a.count||0} song${(a.count||0)!==1?'s':''}</span>
+      </div>
+      <span class="artist-card-arrow">→</span>
+    </div>`;
+  }).join('');
 }
 
 // ─── Song rendering ───────────────────────────────────────────────────────────
@@ -626,12 +789,15 @@ function setCategory(cat,btn){
 }
 
 // ─── Song page ────────────────────────────────────────────────────────────────
-function openSong(id){
+function openSong(id, returnFn){
   currentSong=SONGS.find(s=>s.id===id); if(!currentSong)return;
+  songReturnFn = returnFn || null;
   transposeAmount=0;
   document.getElementById('transposeVal').textContent='0';
   hideAll();
   document.getElementById('songPage').classList.add('active');
+  // Back button label
+  document.querySelector('#songPage .back-btn').textContent = songReturnFn ? '← Back to artist' : '← Back to songs';
   document.getElementById('spTitle').textContent=currentSong.title;
   document.getElementById('spArtist').textContent='by '+currentSong.artist;
   document.getElementById('spKey').textContent='Key: '+(currentSong.key||'?');
