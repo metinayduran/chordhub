@@ -247,6 +247,83 @@ footer span{color:var(--accent);}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 .animate-in{animation:fadeIn 0.3s ease forwards;}
+
+/* ══ PLAYLISTS ══ */
+/* Public playlist grid on home */
+.playlists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.playlist-card{background:var(--surface);padding:1.4rem;cursor:pointer;transition:background 0.15s;display:flex;flex-direction:column;gap:0.6rem;position:relative;}
+.playlist-card:hover{background:var(--surface2);}
+.playlist-card:hover .pl-arrow{opacity:1;transform:translateX(0);}
+.pl-icon{width:44px;height:44px;border-radius:10px;background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.18);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;margin-bottom:0.2rem;}
+.pl-name{font-size:1rem;font-weight:600;line-height:1.2;}
+.pl-desc{font-size:0.78rem;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pl-meta{font-size:0.72rem;color:var(--text-dim);}
+.pl-arrow{color:var(--accent);font-size:0.9rem;opacity:0;transform:translateX(-4px);transition:all 0.2s;margin-left:auto;margin-top:auto;}
+.pl-del-btn{position:absolute;top:0.6rem;right:0.6rem;background:rgba(220,80,80,0.15);border:none;color:var(--danger);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:0.8rem;align-items:center;justify-content:center;display:none;transition:background 0.15s;}
+.pl-del-btn:hover{background:rgba(220,80,80,0.35);}
+body.admin-mode .pl-del-btn{display:flex;}
+
+/* Playlist detail page */
+.playlist-page{display:none;}
+.playlist-page.active{display:block;}
+.pl-header{padding:2.5rem 2rem 2rem;max-width:1000px;margin:0 auto;border-bottom:1px solid var(--border);}
+.pl-header-top{display:flex;align-items:center;gap:1.5rem;margin-bottom:0.8rem;}
+.pl-big-icon{width:72px;height:72px;border-radius:16px;background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.2);display:flex;align-items:center;justify-content:center;font-size:2.2rem;flex-shrink:0;}
+.pl-header h1{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.1;letter-spacing:-0.02em;}
+.pl-header-meta{font-size:0.85rem;color:var(--text-muted);margin-top:0.4rem;}
+.pl-header-desc{font-size:0.9rem;color:var(--text-muted);line-height:1.6;margin-top:0.6rem;max-width:600px;}
+.pl-songs-section{max-width:1000px;margin:0 auto;padding:2rem;}
+.pl-songs-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem;}
+.pl-songs-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.pl-song-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.pl-song-row{background:var(--surface);padding:1rem 1.4rem;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:1rem;}
+.pl-song-row:hover{background:var(--surface2);}
+.pl-song-num{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--text-dim);min-width:1.4rem;text-align:right;flex-shrink:0;}
+.pl-song-info{flex:1;min-width:0;}
+.pl-song-title{font-size:0.95rem;font-weight:500;}
+.pl-song-artist{font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-top:0.1rem;}
+.pl-song-tags{display:flex;gap:0.4rem;align-items:center;flex-shrink:0;}
+.pl-song-arrow{color:var(--text-dim);font-size:0.85rem;flex-shrink:0;transition:color 0.15s;}
+.pl-song-row:hover .pl-song-arrow{color:var(--accent);}
+
+/* Admin playlists panel */
+.pl-admin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;display:flex;align-items:center;gap:1rem;transition:background 0.15s;}
+.pl-admin-card:hover{background:var(--surface2);}
+.pl-admin-icon{width:38px;height:38px;border-radius:8px;background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.pl-admin-info{flex:1;min-width:0;}
+.pl-admin-name{font-size:0.95rem;font-weight:600;}
+.pl-admin-meta{font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem;}
+.pl-admin-actions{display:flex;gap:0.5rem;flex-shrink:0;}
+.pl-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem;margin-top:1.2rem;}
+
+/* Playlist modal song picker */
+.song-picker{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:0.5rem;}
+.song-picker-search{padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1;}
+.song-picker-search input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.2s;}
+.song-picker-search input:focus{border-color:var(--accent);}
+.song-pick-row{display:flex;align-items:center;gap:0.8rem;padding:0.65rem 0.8rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);}
+.song-pick-row:last-child{border-bottom:none;}
+.song-pick-row:hover{background:var(--surface2);}
+.song-pick-row.selected{background:rgba(232,201,122,0.07);}
+.song-pick-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;font-size:0.7rem;color:var(--bg);}
+.song-pick-row.selected .song-pick-check{background:var(--accent);border-color:var(--accent);}
+.song-pick-info{flex:1;min-width:0;}
+.song-pick-title{font-size:0.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song-pick-artist{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.selected-count{font-size:0.78rem;color:var(--accent);font-weight:600;margin-top:0.5rem;}
+
+/* Draggable order list inside modal */
+.order-list{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:0.4rem;}
+.order-item{display:flex;align-items:center;gap:0.7rem;padding:0.5rem 0.6rem;background:var(--surface);border-radius:6px;cursor:grab;}
+.order-item:active{cursor:grabbing;}
+.order-item.drag-over{border:1px dashed var(--accent);}
+.order-drag-handle{color:var(--text-dim);font-size:0.9rem;flex-shrink:0;user-select:none;}
+.order-item-num{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text-dim);min-width:1.2rem;}
+.order-item-info{flex:1;min-width:0;}
+.order-item-title{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.order-item-artist{font-size:0.7rem;color:var(--text-muted);}
+.order-item-remove{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:0 0.2rem;transition:color 0.15s;flex-shrink:0;}
+.order-item-remove:hover{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -283,6 +360,7 @@ footer span{color:var(--accent);}
   <div class="home-tabs">
     <button class="home-tab active" id="tabSongs" onclick="switchHomeTab('songs',this)">Songs</button>
     <button class="home-tab" id="tabArtists" onclick="switchHomeTab('artists',this)">Artists</button>
+    <button class="home-tab" id="tabPlaylists" onclick="switchHomeTab('playlists',this)">Playlists</button>
   </div>
 
   <!-- Songs panel -->
@@ -308,6 +386,33 @@ footer span{color:var(--accent);}
     <div id="artistsGrid" class="artists-grid">
       <div class="loading"><div class="spinner"></div>&nbsp;Loading artists…</div>
     </div>
+  </div>
+
+  <!-- Playlists panel -->
+  <div id="homePlaylistsPanel" class="section" style="display:none">
+    <div class="section-title">Playlists</div>
+    <div id="playlistsGrid" class="playlists-grid">
+      <div class="loading"><div class="spinner"></div>&nbsp;Loading playlists…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PLAYLIST DETAIL PAGE ══════════════════════ -->
+<div class="playlist-page" id="playlistPage">
+  <div class="pl-header">
+    <button class="back-btn" onclick="goPlaylists()">← Back to Playlists</button>
+    <div class="pl-header-top">
+      <div class="pl-big-icon" id="plPageIcon"></div>
+      <div>
+        <h1 id="plPageName"></h1>
+        <div class="pl-header-meta" id="plPageMeta"></div>
+      </div>
+    </div>
+    <div class="pl-header-desc" id="plPageDesc"></div>
+  </div>
+  <div class="pl-songs-section">
+    <div class="pl-songs-title" id="plPageSongsTitle">Songs</div>
+    <div class="pl-song-list" id="plPageSongList"></div>
   </div>
 </div>
 
@@ -372,6 +477,7 @@ footer span{color:var(--accent);}
   <div class="admin-tabs-bar">
     <button class="admin-tab active" onclick="switchAdminTab('songs',this)">🎵 Songs</button>
     <button class="admin-tab" onclick="switchAdminTab('artists',this)">🎸 Artists</button>
+    <button class="admin-tab" onclick="switchAdminTab('playlists',this)">📋 Playlists</button>
   </div>
   <div class="admin-content">
 
@@ -394,6 +500,17 @@ footer span{color:var(--accent);}
       </div>
       <div class="admin-list" id="adminArtistsList">
         <div class="loading"><div class="spinner"></div>&nbsp;Loading…</div>
+      </div>
+    </div>
+
+    <!-- Playlists panel -->
+    <div class="admin-panel" id="adminPlaylistsPanel">
+      <div class="admin-toolbar">
+        <div class="admin-count" id="playlistCount">Loading…</div>
+        <button class="btn-primary" style="width:auto;padding:0.6rem 1.4rem" onclick="openAddPlaylistModal()">+ New Playlist</button>
+      </div>
+      <div class="pl-admin-grid" id="adminPlaylistsList">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div>&nbsp;Loading…</div>
       </div>
     </div>
 
@@ -523,6 +640,54 @@ footer span{color:var(--accent);}
   </div>
 </div>
 
+<!-- ══════════════════════ ADD/EDIT PLAYLIST MODAL ══════════════════════ -->
+<div class="overlay" id="playlistModal">
+  <div class="modal" style="max-width:640px">
+    <button class="modal-close" onclick="closePlaylistModal()">✕</button>
+    <h2 id="playlistModalTitle">New Playlist</h2>
+    <input type="hidden" id="editPlaylistId">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Playlist Name *</label>
+        <input type="text" id="fPlName" placeholder="e.g. Campfire Classics">
+      </div>
+      <div class="form-group">
+        <label>Emoji Icon</label>
+        <input type="text" id="fPlIcon" placeholder="🎸" maxlength="4" style="font-size:1.4rem;text-align:center;">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <input type="text" id="fPlDesc" placeholder="A short description of this playlist…">
+    </div>
+
+    <!-- Step 1: Pick songs -->
+    <div class="form-group">
+      <label>Select Songs *</label>
+      <div class="song-picker" id="songPickerContainer">
+        <div class="song-picker-search">
+          <input type="text" id="songPickerSearch" placeholder="Filter songs…" oninput="filterSongPicker(this.value)">
+        </div>
+        <div id="songPickerList"></div>
+      </div>
+      <div class="selected-count" id="selectedCount">0 songs selected</div>
+    </div>
+
+    <!-- Step 2: Reorder selected songs -->
+    <div class="form-group" id="orderSection" style="display:none">
+      <label>Song Order <span style="color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">(drag to reorder)</span></label>
+      <div class="order-list" id="orderList"></div>
+    </div>
+
+    <div class="status-msg" id="playlistModalStatus"></div>
+    <div style="display:flex;gap:0.8rem;margin-top:1rem;">
+      <button class="btn-secondary" onclick="closePlaylistModal()">Cancel</button>
+      <button class="btn-primary" onclick="savePlaylist()" id="savePlaylistBtn">Save Playlist</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ CONFIRM DELETE MODAL ══════════════════════ -->
 <div class="overlay" id="confirmModal">
   <div class="modal" style="max-width:360px;text-align:center;">
@@ -552,10 +717,11 @@ footer span{color:var(--accent);}
 function withFb(fn){ window._fbReady ? fn(window._fb) : window.addEventListener('fbReady',()=>fn(window._fb),{once:true}); }
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let SONGS=[], ARTISTS=[], currentSong=null, transposeAmount=0;
+let SONGS=[], ARTISTS=[], PLAYLISTS=[], currentSong=null, transposeAmount=0;
 let autoscrolling=false, autoscrollInterval=null, fontSize=0.95, activeCategory='all';
 let pendingDeleteFn=()=>{};
 let songReturnFn = null; // where to go when pressing back from song page
+let plSelectedIds=[]; // playlist modal: selected song ids in order
 
 // ─── Music helpers ────────────────────────────────────────────────────────────
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -603,6 +769,7 @@ function hideAll(){
   document.getElementById('homePage').classList.add('hidden');
   document.getElementById('songPage').classList.remove('active');
   document.getElementById('artistPage').classList.remove('active');
+  document.getElementById('playlistPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
 }
@@ -617,6 +784,11 @@ function goArtists(){
   document.getElementById('homePage').classList.remove('hidden');
   switchHomeTab('artists', document.getElementById('tabArtists'));
 }
+function goPlaylists(){
+  hideAll();
+  document.getElementById('homePage').classList.remove('hidden');
+  switchHomeTab('playlists', document.getElementById('tabPlaylists'));
+}
 function openLogin(){
   hideAll();
   document.getElementById('loginPage').classList.add('active');
@@ -625,23 +797,27 @@ function goAdmin(){
   if(!window._currentUser){openLogin();return;}
   hideAll();
   document.getElementById('adminPage').classList.add('active');
-  renderAdminSongs(); renderAdminArtists();
+  renderAdminSongs(); renderAdminArtists(); renderAdminPlaylists();
 }
 
 function switchHomeTab(tab, btn){
   document.querySelectorAll('.home-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('homeSongsPanel').style.display = tab==='songs' ? '' : 'none';
-  document.getElementById('homeArtistsPanel').style.display = tab==='artists' ? '' : 'none';
-  if(tab==='artists') renderArtistsGrid(document.getElementById('heroSearch').value);
+  document.getElementById('homeSongsPanel').style.display     = tab==='songs'     ? '' : 'none';
+  document.getElementById('homeArtistsPanel').style.display   = tab==='artists'   ? '' : 'none';
+  document.getElementById('homePlaylistsPanel').style.display = tab==='playlists' ? '' : 'none';
+  if(tab==='artists')   renderArtistsGrid(document.getElementById('heroSearch').value);
+  if(tab==='playlists') renderPlaylistsGrid();
 }
 
 function onHeroSearch(q){
   document.getElementById('heroSearch').value=q;
   document.getElementById('headerSearch').value=q;
-  const activePanelIsArtists = document.getElementById('homeArtistsPanel').style.display !== 'none';
-  if(activePanelIsArtists) renderArtistsGrid(q);
-  else renderSongs(SONGS);
+  const activePanelIsArtists   = document.getElementById('homeArtistsPanel').style.display !== 'none';
+  const activePanelIsPlaylists = document.getElementById('homePlaylistsPanel').style.display !== 'none';
+  if(activePanelIsArtists)       renderArtistsGrid(q);
+  else if(activePanelIsPlaylists) renderPlaylistsGrid(q);
+  else                            renderSongs(SONGS);
 }
 
 function openArtistPage(artistName){
@@ -725,6 +901,13 @@ function loadArtists(){
         document.getElementById('artistSuggestions').innerHTML=ARTISTS.map(a=>`<option value="${esc(a.name)}">`).join('');
         renderArtistsGrid();
       })
+      .catch(()=>{});
+  });
+}
+function loadPlaylists(){
+  withFb(({db,collection,getDocs,query,orderBy})=>{
+    getDocs(query(collection(db,'playlists'),orderBy('createdAt')))
+      .then(snap=>{PLAYLISTS=snap.docs.map(d=>({id:d.id,...d.data()}));renderPlaylistsGrid();renderAdminPlaylists();})
       .catch(()=>{});
   });
 }
@@ -878,11 +1061,223 @@ function renderAdminArtists(){
     </div>`).join('');
 }
 
+// ─── Public playlists grid ────────────────────────────────────────────────────
+function renderPlaylistsGrid(q=''){
+  const grid=document.getElementById('playlistsGrid'); if(!grid)return;
+  let list=PLAYLISTS;
+  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.description||'').toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No playlists yet.</div>';return;}
+  grid.innerHTML=list.map(p=>`
+    <div class="playlist-card animate-in" onclick="openPlaylistPage('${p.id}')">
+      <button class="pl-del-btn" onclick="event.stopPropagation();promptDeletePlaylist('${p.id}','${esc(p.name)}')" title="Delete">✕</button>
+      <div class="pl-icon">${p.icon||'🎵'}</div>
+      <div class="pl-name">${esc(p.name)}</div>
+      ${p.description?`<div class="pl-desc">${esc(p.description)}</div>`:''}
+      <div class="pl-meta">${(p.songIds||[]).length} song${(p.songIds||[]).length!==1?'s':''}</div>
+      <span class="pl-arrow">→</span>
+    </div>`).join('');
+}
+
+// ─── Playlist detail page ─────────────────────────────────────────────────────
+function openPlaylistPage(id){
+  const pl=PLAYLISTS.find(p=>p.id===id); if(!pl)return;
+  hideAll();
+  document.getElementById('playlistPage').classList.add('active');
+  document.getElementById('plPageIcon').textContent=pl.icon||'🎵';
+  document.getElementById('plPageName').textContent=pl.name;
+  document.getElementById('plPageMeta').textContent=(pl.songIds||[]).length+' songs';
+  document.getElementById('plPageDesc').textContent=pl.description||'';
+  document.getElementById('plPageDesc').style.display=pl.description?'':'none';
+  document.getElementById('plPageSongsTitle').textContent=(pl.songIds||[]).length+' Songs';
+  const list=document.getElementById('plPageSongList');
+  const songs=(pl.songIds||[]).map(sid=>SONGS.find(s=>s.id===sid)).filter(Boolean);
+  if(!songs.length){list.innerHTML='<div class="empty-state">No songs in this playlist.</div>';return;}
+  list.innerHTML=songs.map((s,i)=>`
+    <div class="pl-song-row" onclick="openSong('${s.id}',()=>openPlaylistPage('${id}'))">
+      <span class="pl-song-num">${i+1}</span>
+      <div class="pl-song-info">
+        <div class="pl-song-title">${esc(s.title)}</div>
+        <div class="pl-song-artist">${esc(s.artist)}</div>
+      </div>
+      <div class="pl-song-tags">
+        <span class="tag tag-key">${s.key||''}</span>
+        <span class="tag tag-diff-${s.difficulty||'easy'}">${s.difficulty||'easy'}</span>
+        ${s.capo>0?`<span class="tag tag-capo">Capo ${s.capo}</span>`:''}
+      </div>
+      <span class="pl-song-arrow">→</span>
+    </div>`).join('');
+  window.scrollTo(0,0);
+}
+
+// ─── Admin playlists list ─────────────────────────────────────────────────────
+function renderAdminPlaylists(){
+  const el=document.getElementById('adminPlaylistsList'); if(!el)return;
+  document.getElementById('playlistCount').textContent=PLAYLISTS.length+' playlist'+(PLAYLISTS.length!==1?'s':'');
+  if(!PLAYLISTS.length){el.innerHTML='<div class="empty-state" style="grid-column:1/-1">No playlists yet — create your first!</div>';return;}
+  el.innerHTML=PLAYLISTS.map(p=>`
+    <div class="pl-admin-card animate-in">
+      <div class="pl-admin-icon">${p.icon||'🎵'}</div>
+      <div class="pl-admin-info">
+        <div class="pl-admin-name">${esc(p.name)}</div>
+        <div class="pl-admin-meta">${(p.songIds||[]).length} songs${p.description?' · '+esc(p.description.slice(0,40))+(p.description.length>40?'…':''):''}</div>
+      </div>
+      <div class="pl-admin-actions">
+        <button class="btn-edit-sm" onclick="openEditPlaylistModal('${p.id}')">Edit</button>
+        <button class="btn-danger-sm" onclick="promptDeletePlaylist('${p.id}','${esc(p.name)}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Playlist modal ───────────────────────────────────────────────────────────
+let dragSrcIdx=null;
+
+function openAddPlaylistModal(){
+  document.getElementById('playlistModalTitle').textContent='New Playlist';
+  document.getElementById('editPlaylistId').value='';
+  document.getElementById('fPlName').value='';
+  document.getElementById('fPlIcon').value='🎵';
+  document.getElementById('fPlDesc').value='';
+  plSelectedIds=[];
+  clearStatus('playlistModalStatus');
+  buildSongPicker('');
+  renderOrderList();
+  document.getElementById('playlistModal').classList.add('open');
+}
+
+function openEditPlaylistModal(id){
+  const p=PLAYLISTS.find(x=>x.id===id); if(!p)return;
+  document.getElementById('playlistModalTitle').textContent='Edit Playlist';
+  document.getElementById('editPlaylistId').value=id;
+  document.getElementById('fPlName').value=p.name||'';
+  document.getElementById('fPlIcon').value=p.icon||'🎵';
+  document.getElementById('fPlDesc').value=p.description||'';
+  plSelectedIds=[...(p.songIds||[])];
+  clearStatus('playlistModalStatus');
+  buildSongPicker('');
+  renderOrderList();
+  document.getElementById('playlistModal').classList.add('open');
+}
+
+function closePlaylistModal(){document.getElementById('playlistModal').classList.remove('open');}
+
+function buildSongPicker(q){
+  const container=document.getElementById('songPickerList');
+  let list=[...SONGS].sort((a,b)=>a.artist.localeCompare(b.artist)||a.title.localeCompare(b.title));
+  if(q) list=list.filter(s=>s.title.toLowerCase().includes(q.toLowerCase())||s.artist.toLowerCase().includes(q.toLowerCase()));
+  container.innerHTML=list.map(s=>{
+    const sel=plSelectedIds.includes(s.id);
+    return`<div class="song-pick-row${sel?' selected':''}" onclick="toggleSongPick('${s.id}')" id="pick_${s.id}">
+      <div class="song-pick-check">${sel?'✓':''}</div>
+      <div class="song-pick-info">
+        <div class="song-pick-title">${esc(s.title)}</div>
+        <div class="song-pick-artist">${esc(s.artist)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  updateSelectedCount();
+}
+
+function filterSongPicker(q){buildSongPicker(q);}
+
+function toggleSongPick(id){
+  const idx=plSelectedIds.indexOf(id);
+  if(idx>=0) plSelectedIds.splice(idx,1);
+  else plSelectedIds.push(id);
+  // update just this row
+  const row=document.getElementById('pick_'+id);
+  if(row){
+    const sel=plSelectedIds.includes(id);
+    row.classList.toggle('selected',sel);
+    row.querySelector('.song-pick-check').textContent=sel?'✓':'';
+  }
+  updateSelectedCount();
+  renderOrderList();
+}
+
+function updateSelectedCount(){
+  const n=plSelectedIds.length;
+  document.getElementById('selectedCount').textContent=n+' song'+(n!==1?'s':'')+' selected';
+}
+
+function renderOrderList(){
+  const sec=document.getElementById('orderSection');
+  const list=document.getElementById('orderList');
+  if(!plSelectedIds.length){sec.style.display='none';list.innerHTML='';return;}
+  sec.style.display='';
+  list.innerHTML=plSelectedIds.map((id,i)=>{
+    const s=SONGS.find(x=>x.id===id); if(!s)return'';
+    return`<div class="order-item" draggable="true" data-id="${id}" data-idx="${i}"
+        ondragstart="dragStart(event,${i})" ondragover="dragOver(event)" ondrop="dragDrop(event,${i})" ondragleave="dragLeave(event)">
+      <span class="order-drag-handle">⠿</span>
+      <span class="order-item-num">${i+1}</span>
+      <div class="order-item-info">
+        <div class="order-item-title">${esc(s.title)}</div>
+        <div class="order-item-artist">${esc(s.artist)}</div>
+      </div>
+      <button class="order-item-remove" onclick="removeSongFromOrder('${id}')" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeSongFromOrder(id){
+  plSelectedIds=plSelectedIds.filter(x=>x!==id);
+  const row=document.getElementById('pick_'+id);
+  if(row){row.classList.remove('selected');row.querySelector('.song-pick-check').textContent='';}
+  updateSelectedCount(); renderOrderList();
+}
+
+// Drag-and-drop reorder
+function dragStart(e,idx){dragSrcIdx=idx;e.dataTransfer.effectAllowed='move';}
+function dragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over');e.dataTransfer.dropEffect='move';}
+function dragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function dragDrop(e,toIdx){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  if(dragSrcIdx===null||dragSrcIdx===toIdx)return;
+  const moved=plSelectedIds.splice(dragSrcIdx,1)[0];
+  plSelectedIds.splice(toIdx,0,moved);
+  dragSrcIdx=null; renderOrderList();
+}
+
+function savePlaylist(){
+  const btn=document.getElementById('savePlaylistBtn');
+  const name=document.getElementById('fPlName').value.trim();
+  if(!name){setStatus(document.getElementById('playlistModalStatus'),'Playlist name is required.','error');return;}
+  if(!plSelectedIds.length){setStatus(document.getElementById('playlistModalStatus'),'Select at least one song.','error');return;}
+  const data={
+    name, icon:document.getElementById('fPlIcon').value.trim()||'🎵',
+    description:document.getElementById('fPlDesc').value.trim(),
+    songIds:[...plSelectedIds], updatedAt:new Date().toISOString()
+  };
+  btn.disabled=true; btn.textContent='Saving…';
+  const editId=document.getElementById('editPlaylistId').value;
+  withFb(({db,collection,addDoc,doc,updateDoc})=>{
+    const p=editId?updateDoc(doc(db,'playlists',editId),data):addDoc(collection(db,'playlists'),{...data,createdAt:new Date().toISOString()});
+    p.then(()=>{
+      setStatus(document.getElementById('playlistModalStatus'),'✓ Saved!','success');
+      btn.disabled=false; btn.textContent='Save Playlist';
+      loadPlaylists();
+      setTimeout(()=>{closePlaylistModal();},800);
+    }).catch(e=>{setStatus(document.getElementById('playlistModalStatus'),'Error: '+e.message,'error');btn.disabled=false;btn.textContent='Save Playlist';});
+  });
+}
+
+function promptDeletePlaylist(id,name){
+  document.getElementById('confirmTitle').textContent='Delete Playlist?';
+  document.getElementById('confirmMsg').innerHTML=`<b>"${name}"</b> will be permanently removed.`;
+  pendingDeleteFn=()=>{
+    withFb(({db,doc,deleteDoc})=>deleteDoc(doc(db,'playlists',id)).then(()=>{
+      PLAYLISTS=PLAYLISTS.filter(p=>p.id!==id); closeConfirm(); renderPlaylistsGrid(); renderAdminPlaylists();
+    }).catch(e=>alert('Error: '+e.message)));
+  };
+  document.getElementById('confirmModal').classList.add('open');
+}
+
 function switchAdminTab(tab,btn){
   document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('adminSongsPanel').classList.toggle('active',tab==='songs');
   document.getElementById('adminArtistsPanel').classList.toggle('active',tab==='artists');
+  document.getElementById('adminPlaylistsPanel').classList.toggle('active',tab==='playlists');
 }
 
 // ─── Song modal ───────────────────────────────────────────────────────────────
@@ -1010,7 +1405,7 @@ function clearStatus(id){const el=document.getElementById(id);el.textContent='';
 document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-withFb(()=>{ loadSongs(); loadArtists(); });
+withFb(()=>{ loadSongs(); loadArtists(); loadPlaylists(); });
 </script>
 </body>
 </html>
