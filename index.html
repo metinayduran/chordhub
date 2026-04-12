@@ -54,6 +54,15 @@ nav a,nav button.nav-link{color:var(--text-muted);text-decoration:none;font-size
 nav a:hover,nav button.nav-link:hover{color:var(--accent);}
 .admin-badge{background:rgba(232,201,122,0.15);color:var(--accent);border:1px solid rgba(232,201,122,0.3);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;}
 
+/* SHARE BUTTON */
+.share-btn{display:inline-flex;align-items:center;gap:0.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.9rem;color:var(--text-muted);font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.share-btn:hover{border-color:var(--accent);color:var(--accent);}
+.share-btn svg{width:13px;height:13px;flex-shrink:0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface);border:1px solid var(--accent);color:var(--text);border-radius:10px;padding:0.65rem 1.2rem;font-size:0.85rem;font-weight:500;z-index:500;opacity:0;transition:opacity 0.25s,transform 0.25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
 /* HERO */
 .hero{text-align:center;padding:5rem 2rem 4rem;position:relative;}
 .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse at center,rgba(232,201,122,0.08) 0%,transparent 70%);pointer-events:none;}
@@ -249,7 +258,6 @@ footer span{color:var(--accent);}
 .animate-in{animation:fadeIn 0.3s ease forwards;}
 
 /* ══ PLAYLISTS ══ */
-/* Public playlist grid on home */
 .playlists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .playlist-card{background:var(--surface);padding:1.4rem;cursor:pointer;transition:background 0.15s;display:flex;flex-direction:column;gap:0.6rem;position:relative;}
 .playlist-card:hover{background:var(--surface2);}
@@ -262,7 +270,6 @@ footer span{color:var(--accent);}
 .pl-del-btn{position:absolute;top:0.6rem;right:0.6rem;background:rgba(220,80,80,0.15);border:none;color:var(--danger);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:0.8rem;align-items:center;justify-content:center;display:none;transition:background 0.15s;}
 .pl-del-btn:hover{background:rgba(220,80,80,0.35);}
 body.admin-mode .pl-del-btn{display:flex;}
-
 /* Playlist detail page */
 .playlist-page{display:none;}
 .playlist-page.active{display:block;}
@@ -285,8 +292,8 @@ body.admin-mode .pl-del-btn{display:flex;}
 .pl-song-tags{display:flex;gap:0.4rem;align-items:center;flex-shrink:0;}
 .pl-song-arrow{color:var(--text-dim);font-size:0.85rem;flex-shrink:0;transition:color 0.15s;}
 .pl-song-row:hover .pl-song-arrow{color:var(--accent);}
-
-/* Admin playlists panel */
+/* Admin playlist cards */
+.pl-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem;margin-top:1.2rem;}
 .pl-admin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem 1.4rem;display:flex;align-items:center;gap:1rem;transition:background 0.15s;}
 .pl-admin-card:hover{background:var(--surface2);}
 .pl-admin-icon{width:38px;height:38px;border-radius:8px;background:rgba(232,201,122,0.1);border:1px solid rgba(232,201,122,0.18);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
@@ -294,10 +301,8 @@ body.admin-mode .pl-del-btn{display:flex;}
 .pl-admin-name{font-size:0.95rem;font-weight:600;}
 .pl-admin-meta{font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem;}
 .pl-admin-actions{display:flex;gap:0.5rem;flex-shrink:0;}
-.pl-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:0.8rem;margin-top:1.2rem;}
-
-/* Playlist modal song picker */
-.song-picker{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:0.5rem;}
+/* Song picker in playlist modal */
+.song-picker{max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:0.5rem;}
 .song-picker-search{padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:1;}
 .song-picker-search input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.2s;}
 .song-picker-search input:focus{border-color:var(--accent);}
@@ -311,13 +316,12 @@ body.admin-mode .pl-del-btn{display:flex;}
 .song-pick-title{font-size:0.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .song-pick-artist{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
 .selected-count{font-size:0.78rem;color:var(--accent);font-weight:600;margin-top:0.5rem;}
-
-/* Draggable order list inside modal */
-.order-list{display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:0.4rem;}
-.order-item{display:flex;align-items:center;gap:0.7rem;padding:0.5rem 0.6rem;background:var(--surface);border-radius:6px;cursor:grab;}
+/* Drag-to-reorder list */
+.order-list{display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:0.4rem;}
+.order-item{display:flex;align-items:center;gap:0.7rem;padding:0.5rem 0.6rem;background:var(--surface);border-radius:6px;cursor:grab;user-select:none;}
 .order-item:active{cursor:grabbing;}
 .order-item.drag-over{border:1px dashed var(--accent);}
-.order-drag-handle{color:var(--text-dim);font-size:0.9rem;flex-shrink:0;user-select:none;}
+.order-drag-handle{color:var(--text-dim);font-size:0.9rem;flex-shrink:0;}
 .order-item-num{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--text-dim);min-width:1.2rem;}
 .order-item-info{flex:1;min-width:0;}
 .order-item-title{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -406,6 +410,10 @@ body.admin-mode .pl-del-btn{display:flex;}
       <div>
         <h1 id="plPageName"></h1>
         <div class="pl-header-meta" id="plPageMeta"></div>
+        <button class="share-btn" style="margin-top:0.8rem" onclick="shareCurrentPage()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="3" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="12" cy="13" r="1.5"/><line x1="5.4" y1="7.1" x2="10.6" y2="4"/><line x1="5.4" y1="8.9" x2="10.6" y2="12"/></svg>
+          Share Playlist
+        </button>
       </div>
     </div>
     <div class="pl-header-desc" id="plPageDesc"></div>
@@ -425,6 +433,10 @@ body.admin-mode .pl-del-btn{display:flex;}
       <div>
         <h1 id="apName"></h1>
         <div class="artist-hero-meta" id="apMeta"></div>
+        <button class="share-btn" style="margin-top:0.8rem" onclick="shareCurrentPage()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="3" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="12" cy="13" r="1.5"/><line x1="5.4" y1="7.1" x2="10.6" y2="4"/><line x1="5.4" y1="8.9" x2="10.6" y2="12"/></svg>
+          Share Artist
+        </button>
       </div>
     </div>
   </div>
@@ -456,6 +468,10 @@ body.admin-mode .pl-del-btn{display:flex;}
         <button onclick="changeFontSize(-1)">A−</button>
         <button onclick="changeFontSize(1)">A+</button>
       </div>
+      <button class="share-btn" onclick="shareCurrentPage()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="3" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="12" cy="13" r="1.5"/><line x1="5.4" y1="7.1" x2="10.6" y2="4"/><line x1="5.4" y1="8.9" x2="10.6" y2="12"/></svg>
+        Share
+      </button>
     </div>
   </div>
   <div class="tab-container">
@@ -646,7 +662,6 @@ body.admin-mode .pl-del-btn{display:flex;}
     <button class="modal-close" onclick="closePlaylistModal()">✕</button>
     <h2 id="playlistModalTitle">New Playlist</h2>
     <input type="hidden" id="editPlaylistId">
-
     <div class="form-row">
       <div class="form-group">
         <label>Playlist Name *</label>
@@ -661,8 +676,6 @@ body.admin-mode .pl-del-btn{display:flex;}
       <label>Description (optional)</label>
       <input type="text" id="fPlDesc" placeholder="A short description of this playlist…">
     </div>
-
-    <!-- Step 1: Pick songs -->
     <div class="form-group">
       <label>Select Songs *</label>
       <div class="song-picker" id="songPickerContainer">
@@ -673,13 +686,10 @@ body.admin-mode .pl-del-btn{display:flex;}
       </div>
       <div class="selected-count" id="selectedCount">0 songs selected</div>
     </div>
-
-    <!-- Step 2: Reorder selected songs -->
     <div class="form-group" id="orderSection" style="display:none">
       <label>Song Order <span style="color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0">(drag to reorder)</span></label>
       <div class="order-list" id="orderList"></div>
     </div>
-
     <div class="status-msg" id="playlistModalStatus"></div>
     <div style="display:flex;gap:0.8rem;margin-top:1rem;">
       <button class="btn-secondary" onclick="closePlaylistModal()">Cancel</button>
@@ -709,6 +719,8 @@ body.admin-mode .pl-del-btn{display:flex;}
   <button class="popup-close" onclick="closePopup()">✕</button>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <footer><span>ChordSpace</span> — Guitar chords & tabs, no clutter.</footer>
 
 <!-- ══════════════════════ SCRIPT ══════════════════════ -->
@@ -720,8 +732,9 @@ function withFb(fn){ window._fbReady ? fn(window._fb) : window.addEventListener(
 let SONGS=[], ARTISTS=[], PLAYLISTS=[], currentSong=null, transposeAmount=0;
 let autoscrolling=false, autoscrollInterval=null, fontSize=0.95, activeCategory='all';
 let pendingDeleteFn=()=>{};
-let songReturnFn = null; // where to go when pressing back from song page
-let plSelectedIds=[]; // playlist modal: selected song ids in order
+let songReturnFn = null;
+let plSelectedIds=[];
+let dragSrcIdx=null;
 
 // ─── Music helpers ────────────────────────────────────────────────────────────
 const NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -729,21 +742,188 @@ const NOTE_ALIASES={'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#'};
 function txNote(n,s){const c=NOTE_ALIASES[n]||n,i=NOTES.indexOf(c);return i<0?n:NOTES[(i+s+120)%12];}
 function txChord(ch,s){if(!s)return ch;return ch.replace(/^([A-G][#b]?)/,(m,r)=>txNote(r,s)).replace(/\/([A-G][#b]?)$/,(m,b)=>'/'+txNote(b,s));}
 
-// ─── Chord diagrams ───────────────────────────────────────────────────────────
+// ─── Chord diagrams ── EXTENDED LIBRARY ──────────────────────────────────────
 const CD={
-  "Em7":{f:[0,2,2,0,3,3],b:null},"G":{f:[3,2,0,0,0,3],b:null},"Dsus4":{f:[-1,-1,0,2,3,3],b:null},
-  "A7sus4":{f:[-1,0,2,0,3,0],b:null},"Cadd9":{f:[-1,3,2,0,3,0],b:null},
-  "Bm":{f:[-1,2,4,4,3,2],b:{fret:2,from:1,to:5}},"F#":{f:[2,4,4,3,2,2],b:{fret:2,from:0,to:5}},
-  "A":{f:[-1,0,2,2,2,0],b:null},"E":{f:[0,2,2,1,0,0],b:null},"D":{f:[-1,-1,0,2,3,2],b:null},
-  "Em":{f:[0,2,2,0,0,0],b:null},"Am":{f:[-1,0,2,2,1,0],b:null},"C":{f:[-1,3,2,0,1,0],b:null},
-  "F":{f:[1,3,3,2,1,1],b:{fret:1,from:0,to:5}},"Dm":{f:[-1,-1,0,2,3,1],b:null},
-  "B7":{f:[-1,2,1,2,0,2],b:null},"E7":{f:[0,2,0,1,0,0],b:null},"A7":{f:[-1,0,2,0,2,0],b:null},
-  "F#7":{f:[2,4,2,3,2,2],b:{fret:2,from:0,to:5}},"Am7":{f:[-1,0,2,0,1,0],b:null},
-  "G/B":{f:[-1,2,0,0,0,3],b:null},"A7/C#":{f:[-1,4,2,0,2,0],b:null},
-  "D#":{f:[-1,-1,1,3,4,3],b:null},"Bb":{f:[-1,1,3,3,3,1],b:{fret:1,from:1,to:5}},
-  "B":{f:[-1,2,4,4,4,2],b:{fret:2,from:1,to:5}},"D7":{f:[-1,-1,0,2,1,2],b:null},
-  "G7":{f:[3,2,0,0,0,1],b:null},"G+":{f:[3,2,1,0,0,3],b:null},
-  "F#m":{f:[2,4,4,2,2,2],b:{fret:2,from:0,to:5}},"Dm7":{f:[-1,-1,0,2,1,1],b:{fret:1,from:3,to:5}},
+  // ── Open / Basic ──────────────────────────────────────────────────────────
+  "C":{f:[-1,3,2,0,1,0],b:null},
+  "D":{f:[-1,-1,0,2,3,2],b:null},
+  "E":{f:[0,2,2,1,0,0],b:null},
+  "F":{f:[1,3,3,2,1,1],b:{fret:1,from:0,to:5}},
+  "G":{f:[3,2,0,0,0,3],b:null},
+  "A":{f:[-1,0,2,2,2,0],b:null},
+  "B":{f:[-1,2,4,4,4,2],b:{fret:2,from:1,to:5}},
+  "Am":{f:[-1,0,2,2,1,0],b:null},
+  "Bm":{f:[-1,2,4,4,3,2],b:{fret:2,from:1,to:5}},
+  "Cm":{f:[-1,3,5,5,4,3],b:{fret:3,from:1,to:5}},
+  "Dm":{f:[-1,-1,0,2,3,1],b:null},
+  "Em":{f:[0,2,2,0,0,0],b:null},
+  "Fm":{f:[1,3,3,1,1,1],b:{fret:1,from:0,to:5}},
+  "Gm":{f:[3,5,5,3,3,3],b:{fret:3,from:0,to:5}},
+  // ── 7th chords ──────────────────────────────────────────────────────────
+  "C7":{f:[-1,3,2,3,1,0],b:null},
+  "D7":{f:[-1,-1,0,2,1,2],b:null},
+  "E7":{f:[0,2,0,1,0,0],b:null},
+  "F7":{f:[1,3,3,2,1,1],b:{fret:1,from:0,to:5}},
+  "G7":{f:[3,2,0,0,0,1],b:null},
+  "A7":{f:[-1,0,2,0,2,0],b:null},
+  "B7":{f:[-1,2,1,2,0,2],b:null},
+  "Am7":{f:[-1,0,2,0,1,0],b:null},
+  "Bm7":{f:[-1,2,4,2,3,2],b:{fret:2,from:1,to:5}},
+  "Cm7":{f:[-1,3,5,3,4,3],b:{fret:3,from:1,to:5}},
+  "Dm7":{f:[-1,-1,0,2,1,1],b:{fret:1,from:3,to:5}},
+  "Em7":{f:[0,2,2,0,3,3],b:null},
+  "Fm7":{f:[1,3,1,1,1,1],b:{fret:1,from:0,to:5}},
+  "Gm7":{f:[3,5,3,3,3,3],b:{fret:3,from:0,to:5}},
+  // ── Major 7 (maj7 / M7) ─────────────────────────────────────────────────
+  "Cmaj7":{f:[-1,3,2,0,0,0],b:null},
+  "Dmaj7":{f:[-1,-1,0,2,2,2],b:null},
+  "Emaj7":{f:[0,2,1,1,0,0],b:null},
+  "Fmaj7":{f:[-1,-1,3,2,1,0],b:null},
+  "Gmaj7":{f:[3,2,0,0,0,2],b:null},
+  "Amaj7":{f:[-1,0,2,1,2,0],b:null},
+  "Bmaj7":{f:[-1,2,4,3,4,2],b:{fret:2,from:1,to:5}},
+  "Bbmaj7":{f:[-1,1,3,2,3,1],b:{fret:1,from:1,to:5}},
+  "Ebmaj7":{f:[-1,6,5,3,4,3],b:{fret:3,from:2,to:5}},
+  "G7M":{f:[3,2,0,0,0,2],b:null},   // alias
+  "A7M":{f:[-1,0,2,1,2,0],b:null},  // alias
+  "C7M":{f:[-1,3,2,0,0,0],b:null},  // alias
+  "D7M":{f:[-1,-1,0,2,2,2],b:null}, // alias
+  "E7M":{f:[0,2,1,1,0,0],b:null},   // alias
+  "F7M":{f:[-1,-1,3,2,1,0],b:null}, // alias
+  // ── Minor 7b5 / Half-diminished ─────────────────────────────────────────
+  "Bm7b5":{f:[-1,2,3,2,3,-1],b:null},
+  "Dm7b5":{f:[-1,-1,0,1,3,1],b:null},
+  "Em7b5":{f:[0,1,2,0,3,-1],b:null},
+  // ── Diminished ──────────────────────────────────────────────────────────
+  "Bdim":{f:[-1,2,3,4,3,-1],b:null},
+  "Cdim":{f:[-1,3,4,5,4,-1],b:null},
+  "Ddim":{f:[-1,-1,0,1,0,1],b:null},
+  "Edim":{f:[0,1,2,3,2,-1],b:null},
+  "Fdim":{f:[1,2,3,4,3,-1],b:null},
+  "Gdim":{f:[3,4,5,6,5,-1],b:null},
+  "Adim":{f:[-1,0,1,2,1,-1],b:null},
+  "Bdim7":{f:[-1,2,0,1,0,-1],b:null},
+  // ── Augmented ───────────────────────────────────────────────────────────
+  "Caug":{f:[-1,3,2,1,1,0],b:null},
+  "Daug":{f:[-1,-1,0,3,3,2],b:null},
+  "Eaug":{f:[0,3,2,1,1,0],b:null},
+  "Faug":{f:[1,4,3,2,2,1],b:null},
+  "Gaug":{f:[3,2,1,0,0,3],b:null},
+  "Aaug":{f:[-1,0,3,2,2,1],b:null},
+  "Baug":{f:[-1,2,1,0,0,3],b:null},
+  "G+":{f:[3,2,1,0,0,3],b:null},    // alias
+  // ── Suspended ───────────────────────────────────────────────────────────
+  "Csus2":{f:[-1,3,0,0,1,0],b:null},
+  "Csus4":{f:[-1,3,3,0,1,1],b:null},
+  "Dsus2":{f:[-1,-1,0,2,3,0],b:null},
+  "Dsus4":{f:[-1,-1,0,2,3,3],b:null},
+  "Esus4":{f:[0,2,2,2,0,0],b:null},
+  "Esus2":{f:[0,2,4,4,0,0],b:null},
+  "Gsus2":{f:[3,0,0,0,0,3],b:null},
+  "Gsus4":{f:[3,3,0,0,1,3],b:null},
+  "Asus2":{f:[-1,0,2,2,0,0],b:null},
+  "Asus4":{f:[-1,0,2,2,3,0],b:null},
+  "A7sus4":{f:[-1,0,2,0,3,0],b:null},
+  "D7sus4":{f:[-1,-1,0,2,1,3],b:null},
+  "G7sus4":{f:[3,3,0,0,1,1],b:null},
+  // ── Add9 / Add chords ────────────────────────────────────────────────────
+  "Cadd9":{f:[-1,3,2,0,3,0],b:null},
+  "Dadd9":{f:[-1,-1,0,2,3,0],b:null},
+  "Eadd9":{f:[0,2,2,1,0,2],b:null},
+  "Gadd9":{f:[3,0,0,0,0,3],b:null},
+  "Aadd9":{f:[-1,0,2,4,2,0],b:null},
+  "Fadd9":{f:[-1,-1,3,2,1,3],b:null},
+  "Emadd9":{f:[0,2,4,0,0,0],b:null},
+  "Amadd9":{f:[-1,0,2,4,1,0],b:null},
+  // ── 6th chords ────────────────────────────────────────────────────────────
+  "C6":{f:[-1,3,2,2,1,0],b:null},
+  "D6":{f:[-1,-1,0,2,0,2],b:null},
+  "E6":{f:[0,2,2,1,2,0],b:null},
+  "F6":{f:[-1,-1,3,2,3,0],b:null},
+  "G6":{f:[3,2,0,0,0,0],b:null},
+  "A6":{f:[-1,0,2,2,2,2],b:null},
+  "Am6":{f:[-1,0,2,2,1,2],b:null},
+  "Em6":{f:[0,2,2,0,2,0],b:null},
+  // ── 9th chords ────────────────────────────────────────────────────────────
+  "C9":{f:[-1,3,2,3,3,3],b:null},
+  "D9":{f:[-1,-1,0,2,1,0],b:null},
+  "E9":{f:[0,2,0,1,0,2],b:null},
+  "F9":{f:[1,3,1,2,1,3],b:{fret:1,from:0,to:5}},
+  "G9":{f:[3,2,0,2,0,1],b:null},
+  "A9":{f:[-1,0,2,4,2,3],b:null},
+  "Am9":{f:[-1,0,2,0,1,3],b:null},
+  "Dm9":{f:[-1,5,3,5,4,5],b:{fret:5,from:1,to:5}},
+  "Em9":{f:[0,2,0,0,3,0],b:null},
+  // ── 11th chords ───────────────────────────────────────────────────────────
+  "Am9(11)":{f:[0,0,2,0,1,3],b:null},
+  "C11":{f:[-1,3,3,3,3,3],b:{fret:3,from:1,to:5}},
+  "D11":{f:[-1,5,0,5,3,5],b:null},
+  "G11":{f:[3,2,0,0,1,1],b:null},
+  // ── 13th chords ───────────────────────────────────────────────────────────
+  "G13":{f:[3,2,0,0,0,1],b:null},
+  "A13":{f:[-1,0,2,0,2,2],b:null},
+  "D13":{f:[-1,-1,0,2,0,0],b:null},
+  "C13":{f:[-1,3,2,2,3,3],b:null},
+  // ── Slash / Inversions ────────────────────────────────────────────────────
+  "C/E":{f:[0,3,2,0,1,0],b:null},
+  "C/G":{f:[3,3,2,0,1,0],b:null},
+  "C/B":{f:[-1,2,2,0,1,0],b:null},
+  "C/F":{f:[1,3,2,0,1,0],b:null},
+  "D/F#":{f:[2,0,0,2,3,2],b:null},
+  "D/A":{f:[-1,0,0,2,3,2],b:null},
+  "E/B":{f:[-1,2,2,1,0,0],b:null},
+  "E/G#":{f:[4,2,2,1,0,0],b:null},
+  "F/A":{f:[-1,0,3,2,1,1],b:null},
+  "F/C":{f:[-1,3,3,2,1,1],b:null},
+  "G/B":{f:[-1,2,0,0,0,3],b:null},
+  "G/D":{f:[-1,-1,0,0,0,3],b:null},
+  "G/F#":{f:[2,2,0,0,0,3],b:null},
+  "G/E":{f:[0,2,0,0,0,3],b:null},
+  "Am/E":{f:[0,0,2,2,1,0],b:null},
+  "Am/G":{f:[3,0,2,2,1,0],b:null},
+  "Am/C":{f:[-1,3,2,2,1,0],b:null},
+  "Dm/F":{f:[1,-1,0,2,3,1],b:null},
+  "Em/B":{f:[-1,2,2,0,0,0],b:null},
+  "Em/D":{f:[-1,-1,0,0,0,0],b:null},
+  "A/C#":{f:[-1,4,2,2,2,0],b:null},
+  "A/E":{f:[0,0,2,2,2,0],b:null},
+  "B/D#":{f:[-1,-1,1,3,4,2],b:null},
+  "A7/C#":{f:[-1,4,2,0,2,0],b:null},
+  "G7/B":{f:[-1,2,0,0,0,1],b:null},
+  // ── Sharps / Flats ───────────────────────────────────────────────────────
+  "F#":{f:[2,4,4,3,2,2],b:{fret:2,from:0,to:5}},
+  "F#m":{f:[2,4,4,2,2,2],b:{fret:2,from:0,to:5}},
+  "F#7":{f:[2,4,2,3,2,2],b:{fret:2,from:0,to:5}},
+  "F#m7":{f:[2,4,2,2,2,2],b:{fret:2,from:0,to:5}},
+  "Bb":{f:[-1,1,3,3,3,1],b:{fret:1,from:1,to:5}},
+  "Bbm":{f:[-1,1,3,3,2,1],b:{fret:1,from:1,to:5}},
+  "Bb7":{f:[-1,1,3,1,3,1],b:{fret:1,from:1,to:5}},
+  "Bbmaj7":{f:[-1,1,3,2,3,1],b:{fret:1,from:1,to:5}},
+  "Ab":{f:[4,6,6,5,4,4],b:{fret:4,from:0,to:5}},
+  "Abm":{f:[4,6,6,4,4,4],b:{fret:4,from:0,to:5}},
+  "Eb":{f:[-1,-1,1,3,4,3],b:null},
+  "Ebm":{f:[-1,-1,1,3,4,2],b:null},
+  "D#":{f:[-1,-1,1,3,4,3],b:null},
+  "Db":{f:[-1,4,3,1,2,1],b:{fret:1,from:2,to:5}},
+  "Gb":{f:[2,4,4,3,2,2],b:{fret:2,from:0,to:5}},
+  "C#":{f:[-1,4,6,6,6,4],b:{fret:4,from:1,to:5}},
+  "C#m":{f:[-1,4,6,6,5,4],b:{fret:4,from:1,to:5}},
+  "G#":{f:[4,6,6,5,4,4],b:{fret:4,from:0,to:5}},
+  "G#m":{f:[4,6,6,4,4,4],b:{fret:4,from:0,to:5}},
+  "A#":{f:[-1,1,3,3,3,1],b:{fret:1,from:1,to:5}},
+  // ── Misc / Extra ──────────────────────────────────────────────────────────
+  "Cadd2":{f:[-1,3,0,0,1,0],b:null},
+  "Eadd4":{f:[0,2,2,2,0,0],b:null},
+  "Dsus":{f:[-1,-1,0,2,3,3],b:null},
+  "Esus":{f:[0,2,2,2,0,0],b:null},
+  "Asus":{f:[-1,0,2,2,3,0],b:null},
+  "Em11":{f:[0,2,0,2,3,0],b:null},
+  "Fmaj9":{f:[-1,-1,3,0,1,0],b:null},
+  "Gmaj9":{f:[3,0,0,2,0,2],b:null},
+  "Amaj9":{f:[-1,0,2,1,0,0],b:null},
+  "Cm7":{f:[-1,3,5,3,4,3],b:{fret:3,from:1,to:5}},
+  "Gm7":{f:[3,5,3,3,3,3],b:{fret:3,from:0,to:5}},
+  "Bbm7":{f:[-1,1,3,1,2,1],b:{fret:1,from:1,to:5}},
 };
 function drawChord(name,lg=false){
   const d=CD[name];
@@ -764,7 +944,62 @@ function drawChord(name,lg=false){
   return s+pl+'</svg>';
 }
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
+// ─── Hash-based Router ────────────────────────────────────────────────────────
+// Routes: #/  #/artists  #/playlists  #/song/:id  #/artist/:name  #/playlist/:id
+
+function setHash(hash, replace=false){
+  if(replace) history.replaceState(null,'',hash||'#/');
+  else         history.pushState(null,'',hash||'#/');
+}
+
+function parseHash(){
+  const h = location.hash || '#/';
+  if(h==='#/' || h==='#' || h==='') return {page:'home',sub:'songs'};
+  if(h==='#/artists')   return {page:'home',sub:'artists'};
+  if(h==='#/playlists') return {page:'home',sub:'playlists'};
+  const m = h.match(/^#\/(song|artist|playlist)\/(.+)$/);
+  if(m) return {page:m[1], id:decodeURIComponent(m[2])};
+  return {page:'home',sub:'songs'};
+}
+
+function navigateTo(route, replace=false){
+  setHash(route, replace);
+  renderRoute(parseHash());
+}
+
+function renderRoute(r){
+  switch(r.page){
+    case 'home':
+      _showHome();
+      if(r.sub==='artists')        switchHomeTab('artists',   document.getElementById('tabArtists'));
+      else if(r.sub==='playlists') switchHomeTab('playlists', document.getElementById('tabPlaylists'));
+      else                         switchHomeTab('songs',     document.getElementById('tabSongs'));
+      break;
+    case 'song':
+      if(SONGS.length) { _doOpenSong(r.id); }
+      else { window._pendingRoute=r; }
+      break;
+    case 'artist':
+      if(SONGS.length||ARTISTS.length) { _doOpenArtistPage(r.id); }
+      else { window._pendingRoute=r; }
+      break;
+    case 'playlist':
+      if(PLAYLISTS.length||SONGS.length) { _doOpenPlaylistPage(r.id); }
+      else { window._pendingRoute=r; }
+      break;
+  }
+}
+
+function flushPendingRoute(){
+  if(!window._pendingRoute) return;
+  const r=window._pendingRoute; window._pendingRoute=null;
+  renderRoute(r);
+}
+
+// Listen to browser back/forward
+window.addEventListener('popstate', ()=>renderRoute(parseHash()));
+
+// ─── Navigation helpers ───────────────────────────────────────────────────────
 function hideAll(){
   document.getElementById('homePage').classList.add('hidden');
   document.getElementById('songPage').classList.remove('active');
@@ -773,36 +1008,29 @@ function hideAll(){
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
 }
-function goHome(){
-  hideAll();
+function _showHome(){
+  // Hide all non-home pages, then reveal home
+  document.getElementById('songPage').classList.remove('active');
+  document.getElementById('artistPage').classList.remove('active');
+  document.getElementById('playlistPage').classList.remove('active');
+  document.getElementById('adminPage').classList.remove('active');
+  document.getElementById('loginPage').classList.remove('active');
   document.getElementById('homePage').classList.remove('hidden');
-  stopAutoscroll(); currentSong=null; songReturnFn=null;
-  renderSongs(SONGS);
 }
-function goArtists(){
-  hideAll();
-  document.getElementById('homePage').classList.remove('hidden');
-  switchHomeTab('artists', document.getElementById('tabArtists'));
-}
-function goPlaylists(){
-  hideAll();
-  document.getElementById('homePage').classList.remove('hidden');
-  switchHomeTab('playlists', document.getElementById('tabPlaylists'));
-}
-function openLogin(){
-  hideAll();
-  document.getElementById('loginPage').classList.add('active');
-}
+
+function goHome(){ navigateTo('#/'); stopAutoscroll(); currentSong=null; songReturnFn=null; renderSongs(SONGS); }
+function goArtists(){ navigateTo('#/artists'); }
+function goPlaylists(){ navigateTo('#/playlists'); }
+function openLogin(){ hideAll(); document.getElementById('loginPage').classList.add('active'); }
 function goAdmin(){
   if(!window._currentUser){openLogin();return;}
-  hideAll();
-  document.getElementById('adminPage').classList.add('active');
+  hideAll(); document.getElementById('adminPage').classList.add('active');
   renderAdminSongs(); renderAdminArtists(); renderAdminPlaylists();
 }
 
 function switchHomeTab(tab, btn){
   document.querySelectorAll('.home-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   document.getElementById('homeSongsPanel').style.display     = tab==='songs'     ? '' : 'none';
   document.getElementById('homeArtistsPanel').style.display   = tab==='artists'   ? '' : 'none';
   document.getElementById('homePlaylistsPanel').style.display = tab==='playlists' ? '' : 'none';
@@ -813,38 +1041,53 @@ function switchHomeTab(tab, btn){
 function onHeroSearch(q){
   document.getElementById('heroSearch').value=q;
   document.getElementById('headerSearch').value=q;
-  const activePanelIsArtists   = document.getElementById('homeArtistsPanel').style.display !== 'none';
-  const activePanelIsPlaylists = document.getElementById('homePlaylistsPanel').style.display !== 'none';
-  if(activePanelIsArtists)       renderArtistsGrid(q);
-  else if(activePanelIsPlaylists) renderPlaylistsGrid(q);
-  else                            renderSongs(SONGS);
+  const isArtists   = document.getElementById('homeArtistsPanel').style.display !== 'none';
+  const isPlaylists = document.getElementById('homePlaylistsPanel').style.display !== 'none';
+  if(isArtists)       renderArtistsGrid(q);
+  else if(isPlaylists) renderPlaylistsGrid(q);
+  else                 renderSongs(SONGS);
 }
 
-function openArtistPage(artistName){
+// ─── Share / Copy URL ─────────────────────────────────────────────────────────
+function shareCurrentPage(){
+  const url = location.href;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>showToast('🔗 Link copied!'));
+  } else {
+    const ta=document.createElement('textarea');
+    ta.value=url; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('🔗 Link copied!');
+  }
+}
+let _toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastTimer); _toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ─── Artist page ──────────────────────────────────────────────────────────────
+function openArtistPage(artistName){ navigateTo('#/artist/'+encodeURIComponent(artistName)); }
+function _doOpenArtistPage(artistName){
   const artistObj = ARTISTS.find(a=>a.name===artistName);
   const songs = SONGS.filter(s=>s.artist===artistName);
-  hideAll();
-  document.getElementById('artistPage').classList.add('active');
-
+  hideAll(); document.getElementById('artistPage').classList.add('active');
   const initials = artistName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('apInitial').textContent = initials;
   document.getElementById('apName').textContent = artistName;
-
+  document.title = artistName+' — ChordSpace';
   const meta = document.getElementById('apMeta');
   const parts = [];
   if(artistObj?.genre) parts.push(`<span>${artistObj.genre}</span><span class="dot">·</span>`);
   if(artistObj?.origin) parts.push(`<span>${esc(artistObj.origin)}</span><span class="dot">·</span>`);
   parts.push(`<span>${songs.length} song${songs.length!==1?'s':''}</span>`);
   meta.innerHTML = parts.join(' ');
-
   document.getElementById('apSongsTitle').textContent = `${songs.length} Song${songs.length!==1?'s':''}`;
-
   const list = document.getElementById('apSongsList');
-  if(!songs.length){
-    list.innerHTML='<div class="empty-state">No songs yet for this artist.</div>';
-  } else {
+  if(!songs.length){ list.innerHTML='<div class="empty-state">No songs yet for this artist.</div>'; }
+  else {
     list.innerHTML = songs.map(s=>`
-      <div class="artist-song-row" onclick="openSong('${s.id}', ()=>openArtistPage('${esc(s.artist)}'))">
+      <div class="artist-song-row" onclick="openSong('${s.id}')">
         <div class="artist-song-row-title">${esc(s.title)}</div>
         <div class="artist-song-row-meta">
           <span class="tag tag-key">${s.key||''}</span>
@@ -889,7 +1132,7 @@ function doLogout(){
 function loadSongs(){
   withFb(({db,collection,getDocs,query,orderBy})=>{
     getDocs(query(collection(db,'songs'),orderBy('title')))
-      .then(snap=>{SONGS=snap.docs.map(d=>({id:d.id,...d.data()}));renderSongs(SONGS);renderArtistsGrid();})
+      .then(snap=>{SONGS=snap.docs.map(d=>({id:d.id,...d.data()}));renderSongs(SONGS);renderArtistsGrid();flushPendingRoute();})
       .catch(e=>{console.warn('Firestore error:',e);renderSongs([]);});
   });
 }
@@ -899,7 +1142,7 @@ function loadArtists(){
       .then(snap=>{
         ARTISTS=snap.docs.map(d=>({id:d.id,...d.data()}));
         document.getElementById('artistSuggestions').innerHTML=ARTISTS.map(a=>`<option value="${esc(a.name)}">`).join('');
-        renderArtistsGrid();
+        renderArtistsGrid(); flushPendingRoute();
       })
       .catch(()=>{});
   });
@@ -907,7 +1150,7 @@ function loadArtists(){
 function loadPlaylists(){
   withFb(({db,collection,getDocs,query,orderBy})=>{
     getDocs(query(collection(db,'playlists'),orderBy('createdAt')))
-      .then(snap=>{PLAYLISTS=snap.docs.map(d=>({id:d.id,...d.data()}));renderPlaylistsGrid();renderAdminPlaylists();})
+      .then(snap=>{PLAYLISTS=snap.docs.map(d=>({id:d.id,...d.data()}));renderPlaylistsGrid();renderAdminPlaylists();flushPendingRoute();})
       .catch(()=>{});
   });
 }
@@ -943,10 +1186,18 @@ function renderArtistsGrid(q=''){
 // ─── Song rendering ───────────────────────────────────────────────────────────
 function renderSongs(list){
   const grid=document.getElementById('songsGrid');
+  if(!grid) return;
+  // Show loading spinner if data hasn't arrived yet
+  if(list===null){ grid.innerHTML='<div class="loading"><div class="spinner"></div>&nbsp;Loading songs…</div>'; return; }
   const q=(document.getElementById('heroSearch').value||'').toLowerCase();
   const filtered=list.filter(s=>(activeCategory==='all'||s.category===activeCategory)&&
     (s.title.toLowerCase().includes(q)||s.artist.toLowerCase().includes(q)));
-  if(!filtered.length){grid.innerHTML='<div class="empty-state">No songs found.</div>';return;}
+  if(!filtered.length){
+    grid.innerHTML = list.length===0
+      ? '<div class="loading"><div class="spinner"></div>&nbsp;Loading songs…</div>'
+      : '<div class="empty-state">No songs found.</div>';
+    return;
+  }
   grid.innerHTML=filtered.map(s=>`
     <div class="song-card animate-in" onclick="openSong('${s.id}')">
       <button class="card-del-btn" onclick="event.stopPropagation();promptDeleteSong('${s.id}','${esc(s.title)}')" title="Delete song">✕</button>
@@ -973,14 +1224,20 @@ function setCategory(cat,btn){
 
 // ─── Song page ────────────────────────────────────────────────────────────────
 function openSong(id, returnFn){
+  // If a returnFn is passed (e.g. from artist/playlist page) we skip hash change
+  // so back button can go to caller. Otherwise push a shareable hash.
+  if(!returnFn) navigateTo('#/song/'+id);
+  else _doOpenSong(id, returnFn);
+}
+function _doOpenSong(id, returnFn){
   currentSong=SONGS.find(s=>s.id===id); if(!currentSong)return;
-  songReturnFn = returnFn || null;
+  songReturnFn = returnFn||null;
   transposeAmount=0;
   document.getElementById('transposeVal').textContent='0';
   hideAll();
   document.getElementById('songPage').classList.add('active');
-  // Back button label
-  document.querySelector('#songPage .back-btn').textContent = songReturnFn ? '← Back to artist' : '← Back to songs';
+  document.querySelector('#songPage .back-btn').textContent = songReturnFn ? '← Back' : '← Back to songs';
+  document.title = currentSong.title+' — '+currentSong.artist+' — ChordSpace';
   document.getElementById('spTitle').textContent=currentSong.title;
   document.getElementById('spArtist').textContent='by '+currentSong.artist;
   document.getElementById('spKey').textContent='Key: '+(currentSong.key||'?');
@@ -1079,16 +1336,17 @@ function renderPlaylistsGrid(q=''){
 }
 
 // ─── Playlist detail page ─────────────────────────────────────────────────────
-function openPlaylistPage(id){
+function openPlaylistPage(id){ navigateTo('#/playlist/'+id); }
+function _doOpenPlaylistPage(id){
   const pl=PLAYLISTS.find(p=>p.id===id); if(!pl)return;
-  hideAll();
-  document.getElementById('playlistPage').classList.add('active');
+  hideAll(); document.getElementById('playlistPage').classList.add('active');
   document.getElementById('plPageIcon').textContent=pl.icon||'🎵';
   document.getElementById('plPageName').textContent=pl.name;
   document.getElementById('plPageMeta').textContent=(pl.songIds||[]).length+' songs';
-  document.getElementById('plPageDesc').textContent=pl.description||'';
-  document.getElementById('plPageDesc').style.display=pl.description?'':'none';
+  const descEl=document.getElementById('plPageDesc');
+  descEl.textContent=pl.description||''; descEl.style.display=pl.description?'':'none';
   document.getElementById('plPageSongsTitle').textContent=(pl.songIds||[]).length+' Songs';
+  document.title=pl.name+' — ChordSpace';
   const list=document.getElementById('plPageSongList');
   const songs=(pl.songIds||[]).map(sid=>SONGS.find(s=>s.id===sid)).filter(Boolean);
   if(!songs.length){list.innerHTML='<div class="empty-state">No songs in this playlist.</div>';return;}
@@ -1112,7 +1370,7 @@ function openPlaylistPage(id){
 // ─── Admin playlists list ─────────────────────────────────────────────────────
 function renderAdminPlaylists(){
   const el=document.getElementById('adminPlaylistsList'); if(!el)return;
-  document.getElementById('playlistCount').textContent=PLAYLISTS.length+' playlist'+(PLAYLISTS.length!==1?'s':'');
+  const countEl=document.getElementById('playlistCount'); if(countEl) countEl.textContent=PLAYLISTS.length+' playlist'+(PLAYLISTS.length!==1?'s':'');
   if(!PLAYLISTS.length){el.innerHTML='<div class="empty-state" style="grid-column:1/-1">No playlists yet — create your first!</div>';return;}
   el.innerHTML=PLAYLISTS.map(p=>`
     <div class="pl-admin-card animate-in">
@@ -1129,8 +1387,6 @@ function renderAdminPlaylists(){
 }
 
 // ─── Playlist modal ───────────────────────────────────────────────────────────
-let dragSrcIdx=null;
-
 function openAddPlaylistModal(){
   document.getElementById('playlistModalTitle').textContent='New Playlist';
   document.getElementById('editPlaylistId').value='';
@@ -1143,7 +1399,6 @@ function openAddPlaylistModal(){
   renderOrderList();
   document.getElementById('playlistModal').classList.add('open');
 }
-
 function openEditPlaylistModal(id){
   const p=PLAYLISTS.find(x=>x.id===id); if(!p)return;
   document.getElementById('playlistModalTitle').textContent='Edit Playlist';
@@ -1157,7 +1412,6 @@ function openEditPlaylistModal(id){
   renderOrderList();
   document.getElementById('playlistModal').classList.add('open');
 }
-
 function closePlaylistModal(){document.getElementById('playlistModal').classList.remove('open');}
 
 function buildSongPicker(q){
@@ -1176,32 +1430,21 @@ function buildSongPicker(q){
   }).join('');
   updateSelectedCount();
 }
-
 function filterSongPicker(q){buildSongPicker(q);}
 
 function toggleSongPick(id){
   const idx=plSelectedIds.indexOf(id);
-  if(idx>=0) plSelectedIds.splice(idx,1);
-  else plSelectedIds.push(id);
-  // update just this row
+  if(idx>=0) plSelectedIds.splice(idx,1); else plSelectedIds.push(id);
   const row=document.getElementById('pick_'+id);
-  if(row){
-    const sel=plSelectedIds.includes(id);
-    row.classList.toggle('selected',sel);
-    row.querySelector('.song-pick-check').textContent=sel?'✓':'';
-  }
-  updateSelectedCount();
-  renderOrderList();
+  if(row){const sel=plSelectedIds.includes(id);row.classList.toggle('selected',sel);row.querySelector('.song-pick-check').textContent=sel?'✓':'';}
+  updateSelectedCount(); renderOrderList();
 }
-
 function updateSelectedCount(){
   const n=plSelectedIds.length;
   document.getElementById('selectedCount').textContent=n+' song'+(n!==1?'s':'')+' selected';
 }
-
 function renderOrderList(){
-  const sec=document.getElementById('orderSection');
-  const list=document.getElementById('orderList');
+  const sec=document.getElementById('orderSection'),list=document.getElementById('orderList');
   if(!plSelectedIds.length){sec.style.display='none';list.innerHTML='';return;}
   sec.style.display='';
   list.innerHTML=plSelectedIds.map((id,i)=>{
@@ -1218,15 +1461,12 @@ function renderOrderList(){
     </div>`;
   }).join('');
 }
-
 function removeSongFromOrder(id){
   plSelectedIds=plSelectedIds.filter(x=>x!==id);
   const row=document.getElementById('pick_'+id);
   if(row){row.classList.remove('selected');row.querySelector('.song-pick-check').textContent='';}
   updateSelectedCount(); renderOrderList();
 }
-
-// Drag-and-drop reorder
 function dragStart(e,idx){dragSrcIdx=idx;e.dataTransfer.effectAllowed='move';}
 function dragOver(e){e.preventDefault();e.currentTarget.classList.add('drag-over');e.dataTransfer.dropEffect='move';}
 function dragLeave(e){e.currentTarget.classList.remove('drag-over');}
@@ -1237,36 +1477,33 @@ function dragDrop(e,toIdx){
   plSelectedIds.splice(toIdx,0,moved);
   dragSrcIdx=null; renderOrderList();
 }
-
 function savePlaylist(){
   const btn=document.getElementById('savePlaylistBtn');
   const name=document.getElementById('fPlName').value.trim();
-  if(!name){setStatus(document.getElementById('playlistModalStatus'),'Playlist name is required.','error');return;}
-  if(!plSelectedIds.length){setStatus(document.getElementById('playlistModalStatus'),'Select at least one song.','error');return;}
-  const data={
-    name, icon:document.getElementById('fPlIcon').value.trim()||'🎵',
+  const st=document.getElementById('playlistModalStatus');
+  if(!name){setStatus(st,'Playlist name is required.','error');return;}
+  if(!plSelectedIds.length){setStatus(st,'Select at least one song.','error');return;}
+  const data={name,icon:document.getElementById('fPlIcon').value.trim()||'🎵',
     description:document.getElementById('fPlDesc').value.trim(),
-    songIds:[...plSelectedIds], updatedAt:new Date().toISOString()
-  };
-  btn.disabled=true; btn.textContent='Saving…';
+    songIds:[...plSelectedIds],updatedAt:new Date().toISOString()};
+  btn.disabled=true;btn.textContent='Saving…';
   const editId=document.getElementById('editPlaylistId').value;
   withFb(({db,collection,addDoc,doc,updateDoc})=>{
     const p=editId?updateDoc(doc(db,'playlists',editId),data):addDoc(collection(db,'playlists'),{...data,createdAt:new Date().toISOString()});
     p.then(()=>{
-      setStatus(document.getElementById('playlistModalStatus'),'✓ Saved!','success');
-      btn.disabled=false; btn.textContent='Save Playlist';
+      setStatus(st,'✓ Saved!','success');
+      btn.disabled=false;btn.textContent='Save Playlist';
       loadPlaylists();
-      setTimeout(()=>{closePlaylistModal();},800);
-    }).catch(e=>{setStatus(document.getElementById('playlistModalStatus'),'Error: '+e.message,'error');btn.disabled=false;btn.textContent='Save Playlist';});
+      setTimeout(()=>closePlaylistModal(),800);
+    }).catch(e=>{setStatus(st,'Error: '+e.message,'error');btn.disabled=false;btn.textContent='Save Playlist';});
   });
 }
-
 function promptDeletePlaylist(id,name){
   document.getElementById('confirmTitle').textContent='Delete Playlist?';
   document.getElementById('confirmMsg').innerHTML=`<b>"${name}"</b> will be permanently removed.`;
   pendingDeleteFn=()=>{
     withFb(({db,doc,deleteDoc})=>deleteDoc(doc(db,'playlists',id)).then(()=>{
-      PLAYLISTS=PLAYLISTS.filter(p=>p.id!==id); closeConfirm(); renderPlaylistsGrid(); renderAdminPlaylists();
+      PLAYLISTS=PLAYLISTS.filter(p=>p.id!==id);closeConfirm();renderPlaylistsGrid();renderAdminPlaylists();
     }).catch(e=>alert('Error: '+e.message)));
   };
   document.getElementById('confirmModal').classList.add('open');
@@ -1405,7 +1642,25 @@ function clearStatus(id){const el=document.getElementById(id);el.textContent='';
 document.querySelectorAll('.overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-withFb(()=>{ loadSongs(); loadArtists(); loadPlaylists(); });
+// Run immediately — don't wait for Firebase
+(function init(){
+  try {
+    _showHome();
+    switchHomeTab('songs', document.getElementById('tabSongs'));
+  } catch(e){ console.error('Init error:', e); }
+})();
+
+// Load data when Firebase is ready
+withFb(()=>{
+  try { loadSongs(); } catch(e){ console.error('loadSongs error:',e); }
+  try { loadArtists(); } catch(e){ console.error('loadArtists error:',e); }
+  try { loadPlaylists(); } catch(e){ console.error('loadPlaylists error:',e); }
+  try {
+    const r = parseHash();
+    if(r.page!=='home') window._pendingRoute=r;
+    else renderRoute(r);
+  } catch(e){ console.error('Route error:',e); }
+});
 </script>
 </body>
 </html>
