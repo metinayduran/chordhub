@@ -1030,7 +1030,8 @@ function renderRoute(r){
       else { window._pendingRoute=r; }
       break;
     case 'playlist':
-      if(PLAYLISTS.length||SONGS.length) { _doOpenPlaylistPage(r.id); }
+      // Need PLAYLISTS loaded — SONGS.length alone is not enough
+      if(PLAYLISTS.length) { _doOpenPlaylistPage(r.id); }
       else { window._pendingRoute=r; }
       break;
   }
@@ -1038,7 +1039,12 @@ function renderRoute(r){
 
 function flushPendingRoute(){
   if(!window._pendingRoute) return;
-  const r=window._pendingRoute; window._pendingRoute=null;
+  const r = window._pendingRoute;
+  // Only flush when the specific data this route needs is actually ready
+  if(r.page==='song'     && !SONGS.length)     return;
+  if(r.page==='artist'   && !SONGS.length && !ARTISTS.length) return;
+  if(r.page==='playlist' && !PLAYLISTS.length) return;
+  window._pendingRoute = null;
   renderRoute(r);
 }
 
@@ -1276,7 +1282,8 @@ function openSong(id, returnFn){
   else _doOpenSong(id, returnFn);
 }
 function _doOpenSong(id, returnFn){
-  currentSong=SONGS.find(s=>s.id===id); if(!currentSong)return;
+  currentSong=SONGS.find(s=>s.id===id);
+  if(!currentSong){ goHome(); showToast('Song not found'); return; }
   songReturnFn = returnFn||null;
   transposeAmount=0;
   document.getElementById('transposeVal').textContent='0';
@@ -1384,7 +1391,8 @@ function renderPlaylistsGrid(q=''){
 // ─── Playlist detail page ─────────────────────────────────────────────────────
 function openPlaylistPage(id){ navigateTo('#/playlist/'+id); }
 function _doOpenPlaylistPage(id){
-  const pl=PLAYLISTS.find(p=>p.id===id); if(!pl)return;
+  const pl=PLAYLISTS.find(p=>p.id===id);
+  if(!pl){ goPlaylists(); showToast('Playlist not found'); return; }
   hideAll(); document.getElementById('playlistPage').classList.add('active');
   document.getElementById('plPageIcon').textContent=pl.icon||'🎵';
   document.getElementById('plPageName').textContent=pl.name;
