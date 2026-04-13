@@ -156,7 +156,14 @@ body.admin-mode .card-del-btn{display:flex;}
 .chord-inline{color:var(--accent);font-weight:500;cursor:pointer;transition:color 0.15s;}
 .chord-inline:hover{color:#f0d88a;}
 .chord-sidebar{position:sticky;top:80px;}
-.sidebar-title{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:1rem;font-weight:600;}
+.chord-sidebar.hidden .sidebar-chords{display:none;}
+.chord-sidebar.hidden .sidebar-toggle-icon{transform:rotate(180deg);}
+.chord-sidebar.hidden{opacity:0.6;}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.sidebar-title{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);font-weight:600;margin-bottom:0;}
+.sidebar-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:6px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all 0.2s;flex-shrink:0;}
+.sidebar-toggle:hover{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.sidebar-toggle-icon{transition:transform 0.25s;font-size:0.65rem;line-height:1;}
 .sidebar-chords{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
 .chord-diagram{display:flex;flex-direction:column;align-items:center;gap:0.4rem;}
 .chord-name{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent);}
@@ -500,8 +507,13 @@ body.admin-mode .pl-del-btn{display:flex;}
   </div>
   <div class="tab-container">
     <div class="tab-content" id="tabContent"></div>
-    <div class="chord-sidebar">
-      <div class="sidebar-title">Chords used</div>
+    <div class="chord-sidebar" id="chordSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Chords used</div>
+        <button class="sidebar-toggle" onclick="toggleChordSidebar()" id="sidebarToggleBtn" title="Show/hide chord diagrams">
+          <span class="sidebar-toggle-icon" id="sidebarToggleIcon">▲</span>
+        </button>
+      </div>
       <div class="sidebar-chords" id="sidebarChords"></div>
     </div>
   </div>
@@ -1300,7 +1312,16 @@ function _doOpenSong(id, returnFn){
   const cap=document.getElementById('spCapo');
   if(currentSong.capo>0){cap.textContent='Capo '+currentSong.capo;cap.style.display='';}
   else cap.style.display='none';
-  renderTab(); renderSidebar(); window.scrollTo(0,0);
+  renderTab(); renderSidebar();
+  // Restore sidebar hidden state from last preference
+  try{
+    const sidebar = document.getElementById('chordSidebar');
+    const icon    = document.getElementById('sidebarToggleIcon');
+    const wasHidden = localStorage.getItem('chordSidebarHidden')==='1';
+    sidebar.classList.toggle('hidden', wasHidden);
+    icon.textContent = wasHidden ? '▼' : '▲';
+  }catch(e){}
+  window.scrollTo(0,0);
 }
 function renderTab(){
   const c=document.getElementById('tabContent');
@@ -1316,6 +1337,13 @@ function renderSidebar(){
   const chords=(currentSong.chords||[]).map(c=>txChord(c,transposeAmount));
   document.getElementById('sidebarChords').innerHTML=chords.map(c=>`
     <div class="chord-diagram"><div class="chord-name">${c}</div>${drawChord(c)}</div>`).join('');
+}
+function toggleChordSidebar(){
+  const sidebar = document.getElementById('chordSidebar');
+  const icon    = document.getElementById('sidebarToggleIcon');
+  const isHidden = sidebar.classList.toggle('hidden');
+  icon.textContent = isHidden ? '▼' : '▲';
+  try{ localStorage.setItem('chordSidebarHidden', isHidden ? '1' : '0'); }catch(e){}
 }
 function transpose(dir){
   transposeAmount=((transposeAmount+dir+12)%12);
