@@ -9,8 +9,8 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, getDoc, addDoc, doc, deleteDoc, updateDoc, setDoc, query, orderBy, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCfzB82jnqVCYbm8TfBjNB5mxfW4gU60JY",
@@ -26,7 +26,7 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 
-window._fb = { db, auth, collection, getDocs, addDoc, doc, deleteDoc, updateDoc, query, orderBy, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+window._fb = { db, auth, collection, getDocs, getDoc, addDoc, doc, deleteDoc, updateDoc, setDoc, query, orderBy, increment, runTransaction, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile };
 window._fbReady = true;
 window.dispatchEvent(new Event('fbReady'));
 </script>
@@ -355,6 +355,48 @@ body.admin-mode .pl-del-btn{display:flex;}
 .order-item-artist{font-size:0.7rem;color:var(--text-muted);}
 .order-item-remove{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:0 0.2rem;transition:color 0.15s;flex-shrink:0;}
 .order-item-remove:hover{color:var(--danger);}
+
+/* ── USER AUTH MODAL TABS ── */
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem;gap:0;}
+.auth-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;padding:0.7rem 0;cursor:pointer;transition:all 0.2s;margin-bottom:-1px;}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.auth-panel{display:none;}
+.auth-panel.active{display:block;}
+
+/* ── USER MENU in NAV ── */
+.user-menu-btn{display:inline-flex;align-items:center;gap:0.45rem;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:0.35rem 0.85rem 0.35rem 0.5rem;cursor:pointer;font-size:0.85rem;color:var(--text-muted);font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.user-menu-btn:hover{border-color:var(--accent);color:var(--accent);}
+.user-avatar{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;}
+
+/* ── FAVORITE BUTTON ── */
+.fav-btn{display:inline-flex;align-items:center;gap:0.4rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.9rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap;}
+.fav-btn:hover{border-color:#e07070;color:#e07070;}
+.fav-btn.favorited{background:rgba(220,80,80,0.12);border-color:#e07070;color:#e07070;}
+.fav-heart{font-size:1rem;line-height:1;transition:transform 0.15s;}
+.fav-btn.favorited .fav-heart{animation:heartPop 0.25s ease;}
+@keyframes heartPop{0%{transform:scale(1);}50%{transform:scale(1.35);}100%{transform:scale(1);}}
+.fav-count-label{font-size:0.78rem;font-family:'DM Mono',monospace;opacity:0.8;}
+.song-fav-pill{display:inline-flex;align-items:center;gap:0.22rem;font-size:0.7rem;color:var(--text-dim);font-family:'DM Mono',monospace;}
+.song-fav-pill.has-favs{color:#e07070;}
+
+/* ── FAVORITES PAGE ── */
+.favs-page{display:none;}
+.favs-page.active{display:block;}
+.favs-header{padding:2.5rem 2rem 1.5rem;max-width:1000px;margin:0 auto;border-bottom:1px solid var(--border);}
+.favs-header h1{font-family:'DM Serif Display',serif;font-size:2rem;letter-spacing:-0.02em;}
+.favs-header p{color:var(--text-muted);font-size:0.9rem;margin-top:0.4rem;}
+.favs-list-section{max-width:1000px;margin:0 auto;padding:2rem;}
+.favs-songs-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem;}
+.favs-songs-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.favs-song-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.favs-song-row{background:var(--surface);padding:1rem 1.4rem;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;gap:1rem;}
+.favs-song-row:hover{background:var(--surface2);}
+.favs-song-info{flex:1;min-width:0;}
+.favs-song-title{font-size:0.95rem;font-weight:500;}
+.favs-song-artist{font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-top:0.1rem;}
+.favs-song-tags{display:flex;gap:0.4rem;align-items:center;flex-shrink:0;}
+.favs-unfav{background:none;border:none;color:#e07070;cursor:pointer;font-size:1.1rem;transition:opacity 0.15s;padding:0.2rem;opacity:0.7;}
+.favs-unfav:hover{opacity:1;}
 </style>
 </head>
 <body>
@@ -369,12 +411,21 @@ body.admin-mode .pl-del-btn{display:flex;}
   <nav>
     <a href="#" onclick="goHome();return false;">Songs</a>
     <a href="#" onclick="goArtists();return false;">Artists</a>
+    <a href="#" id="favsNavLink" onclick="goFavourites();return false;" style="display:none">♥ Favourites</a>
     <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Switch theme">
       <span class="theme-toggle-icon" id="themeIcon">☀️</span>
       <span id="themeLabel">Light</span>
     </button>
     <button class="nav-link" id="adminNavBtn" onclick="goAdmin()" style="display:none">⚙ Admin</button>
-    <button class="nav-link" id="loginNavBtn" onclick="openLogin()">Login</button>
+    <!-- User auth buttons -->
+    <button class="nav-link" id="userLoginBtn" onclick="openUserAuth()">Sign In</button>
+    <button class="user-menu-btn" id="userMenuBtn" onclick="goFavourites()" style="display:none">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userDisplayName">User</span>
+    </button>
+    <button class="nav-link" id="userLogoutBtn" onclick="doUserLogout()" style="display:none">Sign Out</button>
+    <!-- Admin login (kept separate) -->
+    <button class="nav-link" id="loginNavBtn" onclick="openLogin()" style="font-size:0.75rem;opacity:0.5">Admin</button>
     <button class="nav-link" id="logoutNavBtn" onclick="doLogout()" style="display:none">Logout</button>
     <span class="admin-badge" id="adminBadge" style="display:none">ADMIN</span>
   </nav>
@@ -503,6 +554,11 @@ body.admin-mode .pl-del-btn{display:flex;}
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="3" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="12" cy="13" r="1.5"/><line x1="5.4" y1="7.1" x2="10.6" y2="4"/><line x1="5.4" y1="8.9" x2="10.6" y2="12"/></svg>
         Share
       </button>
+      <button class="fav-btn" id="favBtn" onclick="toggleFavourite()">
+        <span class="fav-heart" id="favHeart">♡</span>
+        <span id="favLabel">Favourite</span>
+        <span class="fav-count-label" id="favCountLabel"></span>
+      </button>
     </div>
   </div>
   <div class="tab-container">
@@ -569,11 +625,71 @@ body.admin-mode .pl-del-btn{display:flex;}
   </div>
 </div>
 
+<!-- ══════════════════════ USER AUTH MODAL ══════════════════════ -->
+<div class="overlay" id="userAuthModal">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="closeUserAuth()">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabSignIn" onclick="switchAuthTab('signin')">Sign In</button>
+      <button class="auth-tab" id="authTabSignUp" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- Sign In panel -->
+    <div class="auth-panel active" id="authPanelSignIn">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="siEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doUserSignIn()">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="siPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doUserSignIn()">
+      </div>
+      <div class="status-msg" id="siStatus"></div>
+      <button class="btn-primary" onclick="doUserSignIn()" id="siBtn" style="margin-top:0.8rem">Sign In</button>
+      <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-top:1rem">No account? <a href="#" onclick="switchAuthTab('signup');return false;" style="color:var(--accent)">Create one free</a></p>
+    </div>
+
+    <!-- Sign Up panel -->
+    <div class="auth-panel" id="authPanelSignUp">
+      <div class="form-group">
+        <label>Display Name</label>
+        <input type="text" id="suName" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="suEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="suPass" placeholder="At least 6 characters" onkeydown="if(event.key==='Enter')doUserSignUp()">
+      </div>
+      <div class="status-msg" id="suStatus"></div>
+      <button class="btn-primary" onclick="doUserSignUp()" id="suBtn" style="margin-top:0.8rem">Create Account</button>
+      <p style="text-align:center;font-size:0.82rem;color:var(--text-dim);margin-top:1rem">Already have an account? <a href="#" onclick="switchAuthTab('signin');return false;" style="color:var(--accent)">Sign in</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ FAVOURITES PAGE ══════════════════════ -->
+<div class="favs-page" id="favsPage">
+  <div class="favs-header">
+    <button class="back-btn" onclick="goHome()">← Back to songs</button>
+    <h1>♥ My Favourites</h1>
+    <p id="favsSubtitle">Songs you've saved</p>
+  </div>
+  <div class="favs-list-section">
+    <div class="favs-songs-title" id="favsSongsTitle">Favourite Songs</div>
+    <div class="favs-song-list" id="favsSongList">
+      <div class="loading"><div class="spinner"></div>&nbsp;Loading…</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════ LOGIN PAGE ══════════════════════ -->
 <div class="login-page" id="loginPage">
   <div class="login-box">
     <h2>Admin Login</h2>
-    <p>Sign in with your Firebase account to manage the database.</p>
+    <p>Sign in with your admin account to manage the database.</p>
     <div class="form-group">
       <label>Email</label>
       <input type="email" id="loginEmail" placeholder="admin@example.com">
@@ -771,6 +887,9 @@ let pendingDeleteFn=()=>{};
 let songReturnFn = null;
 let plSelectedIds=[];
 let dragSrcIdx=null;
+// User auth & favourites state
+let _currentRegularUser = null;    // the non-admin signed-in user
+let USER_FAVS = new Set();         // set of song IDs favourited by current user
 
 // ─── Theme ───────────────────────────────────────────────────────────────────
 function applyTheme(theme){
@@ -1069,14 +1188,15 @@ function hideAll(){
   document.getElementById('songPage').classList.remove('active');
   document.getElementById('artistPage').classList.remove('active');
   document.getElementById('playlistPage').classList.remove('active');
+  document.getElementById('favsPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
 }
 function _showHome(){
-  // Hide all non-home pages, then reveal home
   document.getElementById('songPage').classList.remove('active');
   document.getElementById('artistPage').classList.remove('active');
   document.getElementById('playlistPage').classList.remove('active');
+  document.getElementById('favsPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
   document.getElementById('homePage').classList.remove('hidden');
@@ -1085,6 +1205,13 @@ function _showHome(){
 function goHome(){ navigateTo('#/'); stopAutoscroll(); currentSong=null; songReturnFn=null; renderSongs(SONGS); }
 function goArtists(){ navigateTo('#/artists'); }
 function goPlaylists(){ navigateTo('#/playlists'); }
+function goFavourites(){
+  if(!_currentRegularUser){ openUserAuth(); return; }
+  hideAll();
+  document.getElementById('favsPage').classList.add('active');
+  renderFavsPage();
+  window.scrollTo(0,0);
+}
 function openLogin(){ hideAll(); document.getElementById('loginPage').classList.add('active'); }
 function goAdmin(){
   if(!window._currentUser){openLogin();return;}
@@ -1165,17 +1292,43 @@ function _doOpenArtistPage(artistName){
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-withFb(({auth,onAuthStateChanged})=>{
-  onAuthStateChanged(auth,user=>{
-    window._currentUser=user;
-    const ok=!!user;
-    document.getElementById('adminNavBtn').style.display=ok?'':'none';
-    document.getElementById('adminBadge').style.display=ok?'':'none';
-    document.getElementById('loginNavBtn').style.display=ok?'none':'';
-    document.getElementById('logoutNavBtn').style.display=ok?'':'none';
-    document.body.classList.toggle('admin-mode',ok);
+// ADMIN_EMAILS: list your admin email(s) here so the app knows who gets admin privileges
+const ADMIN_EMAILS = ['admin@chordhub.com']; // ← replace with your admin email
+
+withFb(({auth, onAuthStateChanged})=>{
+  onAuthStateChanged(auth, user=>{
+    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
+    window._currentUser = isAdmin ? user : null;   // admin
+    _currentRegularUser  = user || null;            // any logged-in user
+
+    // Admin UI
+    document.getElementById('adminNavBtn').style.display  = isAdmin ? '' : 'none';
+    document.getElementById('adminBadge').style.display   = isAdmin ? '' : 'none';
+    document.getElementById('logoutNavBtn').style.display = isAdmin ? '' : 'none';
+    document.body.classList.toggle('admin-mode', isAdmin);
+
+    // User UI
+    const loggedIn = !!user;
+    document.getElementById('userLoginBtn').style.display   = loggedIn ? 'none' : '';
+    document.getElementById('userMenuBtn').style.display    = loggedIn ? '' : 'none';
+    document.getElementById('userLogoutBtn').style.display  = loggedIn ? '' : 'none';
+    document.getElementById('favsNavLink').style.display    = loggedIn ? '' : 'none';
+    // Hide admin login link when user is logged in (less clutter)
+    document.getElementById('loginNavBtn').style.display    = loggedIn ? 'none' : '';
+
+    if(loggedIn){
+      const initials = (user.displayName||user.email||'U').slice(0,2).toUpperCase();
+      document.getElementById('userAvatar').textContent = initials;
+      document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
+      loadUserFavs();
+    } else {
+      USER_FAVS.clear();
+      updateFavBtnUI();
+    }
   });
 });
+
+// Admin login (existing)
 function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -1191,6 +1344,214 @@ function doLogin(){
 function doLogout(){
   withFb(({auth,signOut})=>signOut(auth).then(()=>goHome()));
 }
+
+// ─── User Auth Modal ───────────────────────────────────────────────────────────
+function openUserAuth(tab='signin'){
+  document.getElementById('userAuthModal').classList.add('open');
+  switchAuthTab(tab);
+}
+function closeUserAuth(){
+  document.getElementById('userAuthModal').classList.remove('open');
+}
+function switchAuthTab(tab){
+  document.getElementById('authTabSignIn').classList.toggle('active', tab==='signin');
+  document.getElementById('authTabSignUp').classList.toggle('active', tab==='signup');
+  document.getElementById('authPanelSignIn').classList.toggle('active', tab==='signin');
+  document.getElementById('authPanelSignUp').classList.toggle('active', tab==='signup');
+}
+function doUserSignIn(){
+  const email = document.getElementById('siEmail').value.trim();
+  const pass  = document.getElementById('siPass').value;
+  const st    = document.getElementById('siStatus');
+  const btn   = document.getElementById('siBtn');
+  st.className='status-msg'; st.textContent='';
+  if(!email||!pass){setStatus(st,'Enter email and password.','error');return;}
+  btn.disabled=true; btn.textContent='Signing in…';
+  withFb(({auth,signInWithEmailAndPassword})=>{
+    signInWithEmailAndPassword(auth,email,pass)
+      .then(()=>{ closeUserAuth(); showToast('👋 Welcome back!'); })
+      .catch(e=>{ setStatus(st, friendlyAuthError(e.code), 'error'); btn.disabled=false; btn.textContent='Sign In'; });
+  });
+}
+function doUserSignUp(){
+  const name  = document.getElementById('suName').value.trim();
+  const email = document.getElementById('suEmail').value.trim();
+  const pass  = document.getElementById('suPass').value;
+  const st    = document.getElementById('suStatus');
+  const btn   = document.getElementById('suBtn');
+  st.className='status-msg'; st.textContent='';
+  if(!email||!pass){setStatus(st,'Email and password are required.','error');return;}
+  if(pass.length<6){setStatus(st,'Password must be at least 6 characters.','error');return;}
+  btn.disabled=true; btn.textContent='Creating account…';
+  withFb(({auth,createUserWithEmailAndPassword,updateProfile})=>{
+    createUserWithEmailAndPassword(auth,email,pass)
+      .then(cred=>{ if(name) return updateProfile(cred.user,{displayName:name}); })
+      .then(()=>{ closeUserAuth(); showToast('🎸 Account created! Welcome!'); })
+      .catch(e=>{ setStatus(st, friendlyAuthError(e.code), 'error'); btn.disabled=false; btn.textContent='Create Account'; });
+  });
+}
+function doUserLogout(){
+  withFb(({auth,signOut})=>signOut(auth).then(()=>{ showToast('Signed out'); goHome(); }));
+}
+function friendlyAuthError(code){
+  const map = {
+    'auth/user-not-found':'No account found with this email.',
+    'auth/wrong-password':'Incorrect password.',
+    'auth/invalid-credential':'Invalid email or password.',
+    'auth/email-already-in-use':'This email is already registered.',
+    'auth/weak-password':'Password must be at least 6 characters.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/too-many-requests':'Too many attempts. Try again later.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+// ─── Favourites ────────────────────────────────────────────────────────────────
+function loadUserFavs(){
+  if(!_currentRegularUser) return;
+  withFb(({db,collection,getDocs})=>{
+    getDocs(collection(db,'users',_currentRegularUser.uid,'favourites'))
+      .then(snap=>{
+        USER_FAVS = new Set(snap.docs.map(d=>d.id));
+        updateFavBtnUI();
+        renderSongs(SONGS); // refresh counts shown on cards
+      })
+      .catch(()=>{});
+  });
+}
+
+function updateFavBtnUI(){
+  const btn    = document.getElementById('favBtn');
+  const heart  = document.getElementById('favHeart');
+  const label  = document.getElementById('favLabel');
+  const countL = document.getElementById('favCountLabel');
+  if(!btn) return;
+  if(!currentSong){ btn.style.display='none'; return; }
+  btn.style.display='';
+  if(!_currentRegularUser){
+    btn.classList.remove('favorited');
+    heart.textContent='♡';
+    label.textContent='Favourite';
+    countL.textContent = favCountLabel(currentSong);
+    return;
+  }
+  const faved = USER_FAVS.has(currentSong.id);
+  btn.classList.toggle('favorited', faved);
+  heart.textContent  = faved ? '♥' : '♡';
+  label.textContent  = faved ? 'Favourited' : 'Favourite';
+  countL.textContent = favCountLabel(currentSong);
+}
+
+function favCountLabel(song){
+  const n = song?.favCount||0;
+  return n>0 ? `· ${n}` : '';
+}
+
+function toggleFavourite(){
+  if(!_currentRegularUser){ openUserAuth(); return; }
+  if(!currentSong) return;
+  const uid = _currentRegularUser.uid;
+  const sid = currentSong.id;
+  const alreadyFaved = USER_FAVS.has(sid);
+  withFb(({db, doc, setDoc, deleteDoc, runTransaction})=>{
+    const favRef  = doc(db,'users',uid,'favourites',sid);
+    const songRef = doc(db,'songs',sid);
+    runTransaction(db, async tx=>{
+      if(alreadyFaved){
+        tx.delete(favRef);
+        tx.update(songRef,{ favCount: (currentSong.favCount||1) - 1 < 0 ? 0 : (currentSong.favCount||1)-1 });
+      } else {
+        tx.set(favRef,{ songId:sid, addedAt:new Date().toISOString() });
+        tx.update(songRef,{ favCount: (currentSong.favCount||0)+1 });
+      }
+    }).then(()=>{
+      if(alreadyFaved){
+        USER_FAVS.delete(sid);
+        currentSong.favCount = Math.max(0,(currentSong.favCount||1)-1);
+        // Also update in SONGS array
+        const idx = SONGS.findIndex(s=>s.id===sid);
+        if(idx>=0) SONGS[idx].favCount = currentSong.favCount;
+        showToast('Removed from favourites');
+      } else {
+        USER_FAVS.add(sid);
+        currentSong.favCount = (currentSong.favCount||0)+1;
+        const idx = SONGS.findIndex(s=>s.id===sid);
+        if(idx>=0) SONGS[idx].favCount = currentSong.favCount;
+        showToast('♥ Added to favourites!');
+      }
+      updateFavBtnUI();
+    }).catch(e=>{
+      // Fallback: simpler set/delete without transaction if song doc doesn't have favCount field
+      if(alreadyFaved){
+        withFb(({db,doc,deleteDoc})=>{
+          deleteDoc(doc(db,'users',uid,'favourites',sid)).then(()=>{
+            USER_FAVS.delete(sid);
+            currentSong.favCount=Math.max(0,(currentSong.favCount||1)-1);
+            const idx=SONGS.findIndex(s=>s.id===sid); if(idx>=0) SONGS[idx].favCount=currentSong.favCount;
+            updateFavBtnUI(); showToast('Removed from favourites');
+          });
+        });
+      } else {
+        withFb(({db,doc,setDoc,updateDoc})=>{
+          setDoc(doc(db,'users',uid,'favourites',sid),{songId:sid,addedAt:new Date().toISOString()}).then(()=>{
+            USER_FAVS.add(sid);
+            currentSong.favCount=(currentSong.favCount||0)+1;
+            const idx=SONGS.findIndex(s=>s.id===sid); if(idx>=0) SONGS[idx].favCount=currentSong.favCount;
+            updateDoc(doc(db,'songs',sid),{favCount:currentSong.favCount}).catch(()=>{});
+            updateFavBtnUI(); showToast('♥ Added to favourites!');
+          });
+        });
+      }
+    });
+  });
+}
+
+// ─── Favourites Page ──────────────────────────────────────────────────────────
+function renderFavsPage(){
+  const list = document.getElementById('favsSongList');
+  const title = document.getElementById('favsSongsTitle');
+  if(!_currentRegularUser){
+    list.innerHTML='<div class="empty-state">Sign in to see your favourites.</div>';
+    return;
+  }
+  const favSongs = SONGS.filter(s=>USER_FAVS.has(s.id));
+  title.textContent = `${favSongs.length} Favourite Song${favSongs.length!==1?'s':''}`;
+  document.getElementById('favsSubtitle').textContent =
+    `${favSongs.length} song${favSongs.length!==1?'s':''} saved`;
+  if(!favSongs.length){
+    list.innerHTML='<div class="empty-state">No favourites yet — heart a song to save it here.</div>';
+    return;
+  }
+  list.innerHTML = favSongs.map(s=>`
+    <div class="favs-song-row" onclick="openSong('${s.id}',()=>goFavourites())">
+      <div class="favs-song-info">
+        <div class="favs-song-title">${esc(s.title)}</div>
+        <div class="favs-song-artist">${esc(s.artist)}</div>
+      </div>
+      <div class="favs-song-tags">
+        <span class="tag tag-key">${s.key||''}</span>
+        <span class="tag tag-diff-${s.difficulty||'easy'}">${s.difficulty||'easy'}</span>
+        ${s.capo>0?`<span class="tag tag-capo">Capo ${s.capo}</span>`:''}
+      </div>
+      <button class="favs-unfav" onclick="event.stopPropagation();removeFavFromPage('${s.id}')" title="Remove favourite">♥</button>
+    </div>`).join('');
+}
+
+function removeFavFromPage(sid){
+  // Quick remove — reuse toggleFavourite logic via currentSong swap
+  const song = SONGS.find(s=>s.id===sid);
+  if(!song||!_currentRegularUser) return;
+  withFb(({db,doc,deleteDoc,updateDoc})=>{
+    deleteDoc(doc(db,'users',_currentRegularUser.uid,'favourites',sid)).then(()=>{
+      USER_FAVS.delete(sid);
+      song.favCount = Math.max(0,(song.favCount||1)-1);
+      updateDoc(doc(db,'songs',sid),{favCount:song.favCount}).catch(()=>{});
+      showToast('Removed from favourites');
+      renderFavsPage();
+    });
+  });
+}
+
 
 // ─── Firestore data ───────────────────────────────────────────────────────────
 function loadSongs(){
@@ -1271,6 +1632,7 @@ function renderSongs(list){
         <span class="tag tag-key">${s.key||''}</span>
         <span class="tag tag-diff-${s.difficulty||'easy'}">${s.difficulty||'easy'}</span>
         ${(s.capo>0)?`<span class="tag tag-capo">Capo ${s.capo}</span>`:''}
+        ${(s.favCount>0)?`<span class="song-fav-pill has-favs">♥ ${s.favCount}</span>`:''}
       </div>
     </div>`).join('');
 }
@@ -1313,6 +1675,7 @@ function _doOpenSong(id, returnFn){
   if(currentSong.capo>0){cap.textContent='Capo '+currentSong.capo;cap.style.display='';}
   else cap.style.display='none';
   renderTab(); renderSidebar();
+  updateFavBtnUI();
   // Restore sidebar hidden state from last preference
   try{
     const sidebar = document.getElementById('chordSidebar');
