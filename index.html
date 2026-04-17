@@ -1292,14 +1292,24 @@ function _doOpenArtistPage(artistName){
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-// ADMIN_EMAILS: list your admin email(s) here so the app knows who gets admin privileges
-const ADMIN_EMAILS = ['admin@chordhub.com']; // ← replace with your admin email
+// Track whether the current session was opened via the admin login form
+window._adminLoggedIn = false;
 
 withFb(({auth, onAuthStateChanged})=>{
   onAuthStateChanged(auth, user=>{
-    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
-    window._currentUser = isAdmin ? user : null;   // admin
-    _currentRegularUser  = user || null;            // any logged-in user
+    // A user is admin if they logged in via the admin login page
+    // OR if they were already flagged as admin (persisted via sessionStorage)
+    if(user && sessionStorage.getItem('csAdminUid') === user.uid){
+      window._adminLoggedIn = true;
+    }
+    if(!user) {
+      window._adminLoggedIn = false;
+      sessionStorage.removeItem('csAdminUid');
+    }
+
+    const isAdmin    = !!user && window._adminLoggedIn;
+    window._currentUser    = isAdmin ? user : null;
+    _currentRegularUser    = user || null;
 
     // Admin UI
     document.getElementById('adminNavBtn').style.display  = isAdmin ? '' : 'none';
@@ -1307,19 +1317,18 @@ withFb(({auth, onAuthStateChanged})=>{
     document.getElementById('logoutNavBtn').style.display = isAdmin ? '' : 'none';
     document.body.classList.toggle('admin-mode', isAdmin);
 
-    // User UI
+    // User UI (all logged-in users including admin)
     const loggedIn = !!user;
-    document.getElementById('userLoginBtn').style.display   = loggedIn ? 'none' : '';
-    document.getElementById('userMenuBtn').style.display    = loggedIn ? '' : 'none';
-    document.getElementById('userLogoutBtn').style.display  = loggedIn ? '' : 'none';
-    document.getElementById('favsNavLink').style.display    = loggedIn ? '' : 'none';
-    // Hide admin login link when user is logged in (less clutter)
-    document.getElementById('loginNavBtn').style.display    = loggedIn ? 'none' : '';
+    document.getElementById('userLoginBtn').style.display  = loggedIn ? 'none' : '';
+    document.getElementById('userMenuBtn').style.display   = loggedIn ? '' : 'none';
+    document.getElementById('userLogoutBtn').style.display = loggedIn && !isAdmin ? '' : 'none';
+    document.getElementById('favsNavLink').style.display   = loggedIn ? '' : 'none';
+    document.getElementById('loginNavBtn').style.display   = loggedIn ? 'none' : '';
 
     if(loggedIn){
       const initials = (user.displayName||user.email||'U').slice(0,2).toUpperCase();
-      document.getElementById('userAvatar').textContent = initials;
-      document.getElementById('userDisplayName').textContent = user.displayName || user.email.split('@')[0];
+      document.getElementById('userAvatar').textContent       = initials;
+      document.getElementById('userDisplayName').textContent  = user.displayName || user.email.split('@')[0];
       loadUserFavs();
     } else {
       USER_FAVS.clear();
@@ -1328,20 +1337,27 @@ withFb(({auth, onAuthStateChanged})=>{
   });
 });
 
-// Admin login (existing)
+// Admin login — sets the admin flag before signing in
 function doLogin(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  const st=document.getElementById('loginStatus');
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const st    = document.getElementById('loginStatus');
   st.className='status-msg'; st.textContent='';
   if(!email||!pass){setStatus(st,'Please enter email and password.','error');return;}
   withFb(({auth,signInWithEmailAndPassword})=>{
     signInWithEmailAndPassword(auth,email,pass)
-      .then(()=>goAdmin())
+      .then(cred=>{
+        // Mark this user/session as admin
+        window._adminLoggedIn = true;
+        sessionStorage.setItem('csAdminUid', cred.user.uid);
+        goAdmin();
+      })
       .catch(e=>setStatus(st,'Login failed: '+e.message,'error'));
   });
 }
 function doLogout(){
+  window._adminLoggedIn = false;
+  sessionStorage.removeItem('csAdminUid');
   withFb(({auth,signOut})=>signOut(auth).then(()=>goHome()));
 }
 
