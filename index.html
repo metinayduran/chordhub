@@ -132,6 +132,8 @@ body.admin-mode .card-del-btn{display:flex;}
 /* SONG PAGE */
 .song-page{display:none;}
 .song-page.active{display:block;}
+.home-page{display:none;}
+.home-page.visible{display:block;}
 .home-page.hidden{display:none;}
 .song-header{padding:2.5rem 2rem 1.5rem;max-width:1000px;margin:0 auto;border-bottom:1px solid var(--border);}
 .back-btn{display:inline-flex;align-items:center;gap:0.4rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;background:none;border:none;padding:0;font-family:'DM Sans',sans-serif;margin-bottom:1.5rem;transition:color 0.2s;}
@@ -1184,7 +1186,9 @@ window.addEventListener('popstate', ()=>renderRoute(parseHash()));
 
 // ─── Navigation helpers ───────────────────────────────────────────────────────
 function hideAll(){
-  document.getElementById('homePage').classList.add('hidden');
+  const hp = document.getElementById('homePage');
+  hp.classList.remove('visible');
+  hp.classList.add('hidden');
   document.getElementById('songPage').classList.remove('active');
   document.getElementById('artistPage').classList.remove('active');
   document.getElementById('playlistPage').classList.remove('active');
@@ -1199,7 +1203,9 @@ function _showHome(){
   document.getElementById('favsPage').classList.remove('active');
   document.getElementById('adminPage').classList.remove('active');
   document.getElementById('loginPage').classList.remove('active');
-  document.getElementById('homePage').classList.remove('hidden');
+  const hp = document.getElementById('homePage');
+  hp.classList.remove('hidden');
+  hp.classList.add('visible');
 }
 
 function goHome(){ navigateTo('#/'); stopAutoscroll(); currentSong=null; songReturnFn=null; renderSongs(SONGS); }
@@ -1214,8 +1220,15 @@ function goFavourites(){
 }
 function openLogin(){ hideAll(); document.getElementById('loginPage').classList.add('active'); }
 function goAdmin(){
-  if(!window._currentUser){openLogin();return;}
-  hideAll(); document.getElementById('adminPage').classList.add('active');
+  if(!window._currentUser){ openLogin(); return; }
+  hideAll();
+  document.getElementById('adminPage').classList.add('active');
+  // Always start on Songs tab
+  document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.admin-tabs-bar .admin-tab').classList.add('active');
+  document.getElementById('adminSongsPanel').classList.add('active');
+  document.getElementById('adminArtistsPanel').classList.remove('active');
+  document.getElementById('adminPlaylistsPanel').classList.remove('active');
   renderAdminSongs(); renderAdminArtists(); renderAdminPlaylists();
 }
 
@@ -1347,9 +1360,19 @@ function doLogin(){
   withFb(({auth,signInWithEmailAndPassword})=>{
     signInWithEmailAndPassword(auth,email,pass)
       .then(cred=>{
-        // Mark this user/session as admin
+        // Set flags immediately — don't wait for onAuthStateChanged
         window._adminLoggedIn = true;
+        window._currentUser   = cred.user;
+        _currentRegularUser   = cred.user;
         sessionStorage.setItem('csAdminUid', cred.user.uid);
+        // Update admin UI right away
+        document.getElementById('adminNavBtn').style.display  = '';
+        document.getElementById('adminBadge').style.display   = '';
+        document.getElementById('logoutNavBtn').style.display = '';
+        document.getElementById('loginNavBtn').style.display  = 'none';
+        document.getElementById('userLoginBtn').style.display = 'none';
+        document.getElementById('favsNavLink').style.display  = '';
+        document.body.classList.add('admin-mode');
         goAdmin();
       })
       .catch(e=>setStatus(st,'Login failed: '+e.message,'error'));
@@ -1385,7 +1408,21 @@ function doUserSignIn(){
   btn.disabled=true; btn.textContent='Signing in…';
   withFb(({auth,signInWithEmailAndPassword})=>{
     signInWithEmailAndPassword(auth,email,pass)
-      .then(()=>{ closeUserAuth(); showToast('👋 Welcome back!'); })
+      .then(cred=>{
+        _currentRegularUser = cred.user;
+        const initials = (cred.user.displayName||cred.user.email||'U').slice(0,2).toUpperCase();
+        document.getElementById('userAvatar').textContent      = initials;
+        document.getElementById('userDisplayName').textContent = cred.user.displayName || cred.user.email.split('@')[0];
+        document.getElementById('userLoginBtn').style.display  = 'none';
+        document.getElementById('userMenuBtn').style.display   = '';
+        document.getElementById('userLogoutBtn').style.display = '';
+        document.getElementById('favsNavLink').style.display   = '';
+        document.getElementById('loginNavBtn').style.display   = 'none';
+        loadUserFavs();
+        closeUserAuth();
+        showToast('👋 Welcome back!');
+        btn.disabled=false; btn.textContent='Sign In';
+      })
       .catch(e=>{ setStatus(st, friendlyAuthError(e.code), 'error'); btn.disabled=false; btn.textContent='Sign In'; });
   });
 }
@@ -1401,8 +1438,25 @@ function doUserSignUp(){
   btn.disabled=true; btn.textContent='Creating account…';
   withFb(({auth,createUserWithEmailAndPassword,updateProfile})=>{
     createUserWithEmailAndPassword(auth,email,pass)
-      .then(cred=>{ if(name) return updateProfile(cred.user,{displayName:name}); })
-      .then(()=>{ closeUserAuth(); showToast('🎸 Account created! Welcome!'); })
+      .then(cred=>{
+        const updateP = name ? updateProfile(cred.user,{displayName:name}) : Promise.resolve();
+        return updateP.then(()=>cred);
+      })
+      .then(cred=>{
+        _currentRegularUser = cred.user;
+        const displayName = name || cred.user.email.split('@')[0];
+        const initials    = displayName.slice(0,2).toUpperCase();
+        document.getElementById('userAvatar').textContent      = initials;
+        document.getElementById('userDisplayName').textContent = displayName;
+        document.getElementById('userLoginBtn').style.display  = 'none';
+        document.getElementById('userMenuBtn').style.display   = '';
+        document.getElementById('userLogoutBtn').style.display = '';
+        document.getElementById('favsNavLink').style.display   = '';
+        document.getElementById('loginNavBtn').style.display   = 'none';
+        closeUserAuth();
+        showToast('🎸 Account created! Welcome!');
+        btn.disabled=false; btn.textContent='Create Account';
+      })
       .catch(e=>{ setStatus(st, friendlyAuthError(e.code), 'error'); btn.disabled=false; btn.textContent='Create Account'; });
   });
 }
